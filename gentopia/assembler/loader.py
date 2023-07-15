@@ -11,6 +11,7 @@ from gentopia.tools import *
 class Loader(yaml.SafeLoader):
     """
         A custom YAML loader that adds support for various custom tags:
+
         - !include: includes a YAML file as a subdocument
         - !prompt: returns a prompt class based on the specified string
         - !tool: returns a tool class based on the specified string
@@ -48,12 +49,13 @@ class Loader(yaml.SafeLoader):
 
     def prompt(self, node: yaml.Node) -> Any:
         """
-        Loads a Custom PromptTemplate from a path relative to the current file.
+            Returns a PromptTemplate class based on the specified string.
 
-        :param node: The YAML node to be loaded.
-        :type node: yaml.Node
-        :return: The loaded PromptTemplate.
-        :rtype: Any
+            :param node: The YAML node representing the prompt string.
+            :type node: yaml.Node
+            :return: The prompt class.
+            :rtype: type
+            :raises AssertionError: If the resolved prompt class is not a subclass of PromptTemplate.
         """
         prompt = self.construct_scalar(node)
         if '.' in prompt:
