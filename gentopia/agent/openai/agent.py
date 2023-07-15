@@ -8,31 +8,66 @@ from gentopia.agent.base_agent import BaseAgent
 from gentopia.llm.client.openai import OpenAIGPTClient
 from gentopia.model.agent_model import AgentType, AgentOutput
 from gentopia.output.base_output import BaseOutput
-from gentopia.prompt import ZeroShotVanillaPrompt
+from gentopia.prompt import VanillaPrompt
 from gentopia.tools import BaseTool
 from gentopia.utils.cost_helpers import calculate_cost
 
 
 class OpenAIFunctionChatAgent(BaseAgent):
+    """
+    OpenAIFunctionChatAgent class inherited from BaseAgent. Implementing OpenAI function call api as agent.
+
+    :param name: Name of the agent, defaults to "OpenAIAgent".
+    :type name: str, optional
+    :param type: Type of the agent, defaults to AgentType.openai.
+    :type type: AgentType, optional
+    :param version: Version of the agent.
+    :type version: str
+    :param description: Description of the agent.
+    :type description: str
+    :param target_tasks: List of target tasks for the agent.
+    :type target_tasks: list[str]
+    :param llm: Language model that the agent uses.
+    :type llm: OpenAIGPTClient
+    :param prompt_template: Template used to create prompts for the agent, defaults to None.
+    :type prompt_template: PromptTemplate, optional
+    :param plugins: List of plugins used by the agent, defaults to None.
+    :type plugins: List[Union[BaseTool, BaseAgent]], optional
+    :param examples: Fewshot examplars used for the agent, defaults to None.
+    :type examples: Union[str, List[str]], optional
+    :param message_scratchpad: Scratchpad for storing message history, defaults to [{"role": "system", "content": "You are a helpful AI assistant."}].
+    :type message_scratchpad: List[Dict], optional
+    """
     name: str = "OpenAIAgent"
     type: AgentType = AgentType.openai
     version: str = "NA"
     description: str = "OpenAI Function Call Agent"
     target_tasks: list[str] = []
     llm: OpenAIGPTClient
-    prompt_template: PromptTemplate = ZeroShotVanillaPrompt
+    prompt_template: PromptTemplate = VanillaPrompt
     plugins: List[Union[BaseTool, BaseAgent]] = []
     examples: Union[str, List[str]] = None
     message_scratchpad: List[Dict] = [{"role": "system", "content": "You are a helpful AI assistant."}]
 
     def initialize_system_message(self, msg):
-        """Initialize the system message to openai api."""
+        """Initialize the system message to openai api.
+
+        :param msg: System message to be initialized.
+        :type msg: str
+        :raises ValueError: Raised if the system message is modified after run
+        """
         if len(self.message_scratchpad) > 1:
-            raise ValueError("System message must be initialized before run")
+            raise ValueError("System message must be initialized before first agent run")
         self.message_scratchpad[0]["content"] = msg
 
     def _format_plugin_schema(self, plugin: Union[BaseTool, BaseAgent]) -> Dict:
-        """Format tool into the open AI function API."""
+        """Format tool into the open AI function API.
+
+        :param plugin: Plugin to be formatted.
+        :type plugin: Union[BaseTool, BaseAgent]
+        :return: Formatted plugin.
+        :rtype: Dict
+        """
         if isinstance(plugin, BaseTool):
             if plugin.args_schema:
                 parameters = plugin.args_schema.schema()
@@ -63,9 +98,12 @@ class OpenAIFunctionChatAgent(BaseAgent):
                 "parameters": parameters,
             }
 
-
-
     def _format_function_schema(self) -> List[Dict]:
+        """Format function schema into the open AI function API.
+
+        :return: Formatted function schema.
+        :rtype: List[Dict]
+        """
         # List the function schema.
         function_schema = []
         for plugin in self.plugins:
@@ -73,6 +111,13 @@ class OpenAIFunctionChatAgent(BaseAgent):
         return function_schema
 
     def run(self, instruction: str, output: Optional[BaseOutput] = None) -> AgentOutput:
+        """Run the agent with the given instruction.
+
+        :param instruction: Instruction to be run.
+        :type instruction: str
+        :param output: Output manager object to be used, defaults to None.
+        :type output: Optional[BaseOutput], optional
+        """
         if output is None:
             output = BaseOutput()
         self.message_scratchpad.append({"role": "user", "content": instruction})
@@ -100,6 +145,14 @@ class OpenAIFunctionChatAgent(BaseAgent):
             )
 
     def stream(self, instruction: Optional[str] = None, output: Optional[BaseOutput] = None):
+        """Stream output the agent with the given instruction.
+
+        :param instruction: Instruction to be run, defaults to None.
+        :type instruction: str
+        :param output: Output manager object to be used, defaults to None.
+        :type output: Optional[BaseOutput], optional
+        """
+
         if output is None:
             output = BaseOutput()
         output.thinking(self.name)

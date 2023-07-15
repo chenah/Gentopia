@@ -14,6 +14,30 @@ from gentopia.tools import BaseTool
 
 
 class BaseAgent(ABC, BaseModel):
+    """Base Agent class defining the essential attributes and methods for an ALM Agent.
+
+    :param name: The name of the agent.
+    :type name: str
+    :param type: The type of the agent.
+    :type type: AgentType
+    :param version: The version of the agent.
+    :type version: str
+    :param description: A brief description of the agent.
+    :type description: str
+    :param target_tasks: List of target tasks for the agent.
+    :type target_tasks: List[str]
+    :param llm: BaseLLM instance or dictionary of BaseLLM instances (eg. for ReWOO, two separate LLMs are needed).
+    :type llm: Union[BaseLLM, Dict[str, BaseLLM]]
+    :param prompt_template: PromptTemplate instance or dictionary of PromptTemplate instances. (eg. for ReWOO, two separate PromptTemplates are needed).
+    :type prompt_template: Union[PromptTemplate, Dict[str, PromptTemplate]]
+    :param plugins: List of plugins available for the agent. PLugins can be tools or other agents.
+    :type plugins: List[Any]
+    :param args_schema: Schema for arguments, defaults to a model with "instruction" of type str.
+    :type args_schema: Optional[Type[BaseModel]]
+    :param memory: An instance of MemoryWrapper.
+    :type memory: Optional[MemoryWrapper]
+    """
+
     name: str
     type: AgentType
     version: str
@@ -27,30 +51,38 @@ class BaseAgent(ABC, BaseModel):
 
     @abstractmethod
     def run(self, *args, **kwargs) -> AgentOutput:
+        """Abstract method to be overridden by child classes for running the agent.
+
+        :return: The output of the agent.
+        :rtype: AgentOutput
+        """
         pass
 
     @abstractmethod
     def stream(self, *args, **kwargs) -> AgentOutput:
+        """Abstract method to be overridden by child classes for running the agent in a stream mode.
+
+        :return: The output of the agent.
+        :rtype: AgentOutput
+        """
         pass
 
-    # def __str__(self):
-    #     return f"""
-    #     {f'Agent: {self.name}'.center(50, '-')}\n
-    #     Type: {self.type}\n
-    #     Version: {self.version}\n
-    #     Description: {self.description}\n
-    #     Target Tasks: {self.target_tasks}\n
-    #     LLM: {self.llm.model_name if isinstance(self.llm, BaseLLM) else
-    #     {k: v.model_name for k, v in self.llm.items()} }\n
-    #     Plugins: {[i.name for i in self.plugins]}\n
-    #     """
-
     def __str__(self):
+        """Overrides the string representation of the BaseAgent object.
+
+        :return: The string representation of the agent.
+        :rtype: str
+        """
         result = io.StringIO()
         rprint(self, file=result)
         return result.getvalue()
 
     def _format_function_map(self) -> Dict[str, Callable]:
+        """Format the function map for the open AI function API.
+
+        :return: The function map.
+        :rtype: Dict[str, Callable]
+        """
         # Map the function name to the real function object.
         function_map = {}
         for plugin in self.plugins:

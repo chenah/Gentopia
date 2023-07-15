@@ -1,6 +1,6 @@
 from gentopia.prompt import PromptTemplate
 
-ZeroShotVanillaPrompt = PromptTemplate(
+VanillaPrompt = PromptTemplate(
     input_variables=["instruction"],
     template="""{instruction}"""
 )

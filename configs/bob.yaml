@@ -3,7 +3,7 @@ name: main
 type: vanilla
 version: 0.0.1
 description: example
-prompt_template: !prompt ZeroShotVanillaPrompt
+prompt_template: !prompt VanillaPrompt
 llm:
   model_name: guanaco-7b
   device: cpu

@@ -9,7 +9,20 @@ from gentopia.tools import *
 
 
 class Loader(yaml.SafeLoader):
+    """
+        A custom YAML loader that adds support for various custom tags:
+        - !include: includes a YAML file as a subdocument
+        - !prompt: returns a prompt class based on the specified string
+        - !tool: returns a tool class based on the specified string
+        - !env: returns the value of an environment variable
+        - !file: returns the contents of a file
+    """
     def __init__(self, stream: IO[Any]) -> None:
+        """
+           Initializes a new instance of the Loader class.
+           :param stream: The stream to load YAML from.
+           :type stream: IOBase
+       """
         self._root = Path(stream.name).resolve().parent
         super(Loader, self).__init__(stream)
         self.add_constructor("!include", Loader.include)
@@ -19,6 +32,14 @@ class Loader(yaml.SafeLoader):
         self.add_constructor("!file", Loader.file)
 
     def include(self, node: yaml.Node) -> Any:
+        """
+        Loads a YAML file from a path relative to the current file. Use this tag to include other agent configs as plugins.
+
+        :param node: The YAML node to be loaded.
+        :type node: yaml.Node
+        :return: The loaded YAML file.
+        :rtype: Any
+        """
         filename = Path(self.construct_scalar(node))
         if not filename.is_absolute():
             filename = self._root / filename
@@ -26,6 +47,14 @@ class Loader(yaml.SafeLoader):
             return yaml.load(f, Loader)
 
     def prompt(self, node: yaml.Node) -> Any:
+        """
+        Loads a Custom PromptTemplate from a path relative to the current file.
+
+        :param node: The YAML node to be loaded.
+        :type node: yaml.Node
+        :return: The loaded PromptTemplate.
+        :rtype: Any
+        """
         prompt = self.construct_scalar(node)
         if '.' in prompt:
             _path = prompt.split('.')
@@ -37,6 +66,14 @@ class Loader(yaml.SafeLoader):
         return prompt_cls
 
     def tool(self, node: yaml.Node) -> Any:
+        """
+        Loads a Custom BaseTool class from a path relative to the current file.
+
+        :param node: The YAML node to be loaded.
+        :type node: yaml.Node
+        :return: The loaded BaseTool class.
+        :rtype: Any
+        """
         tool = self.construct_scalar(node)
         if '.' in tool:
             _path = tool.split('.')
@@ -48,9 +85,25 @@ class Loader(yaml.SafeLoader):
         return tool_cls
 
     def env(self, node: yaml.Node) -> Any:
+        """
+        Loads an environment variable from the current environment, defaults to an empty string if the variable is not set.
+
+        :param node: The YAML node to be loaded.
+        :type node: yaml.Node
+        :return: The loaded environment variable.
+        :rtype: Any
+        """
         return os.environ.get(self.construct_scalar(node), "")
 
     def file(self, node: yaml.Node) -> Any:
+        """
+        Loads any readable file from a path relative to the current file.
+
+        :param node: The YAML node to be loaded.
+        :type node: yaml.Node
+        :return: The loaded file.
+        :rtype: Any
+        """
         filename = Path(self.construct_scalar(node))
         if not filename.is_absolute():
             filename = self._root / filename

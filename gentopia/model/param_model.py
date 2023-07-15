@@ -48,8 +48,10 @@ class HuggingfaceLoaderModel(BaseModel):
         if self.device != "cpu":
             kwargs['torch_dtype'] = torch.float16
         if self.device.startswith("gpu"):
-            kwargs['load_in_8bit'] = True if self.device == "gpu-8bit" else False
-            kwargs['load_in_4bit'] = True if self.device == "gpu-4bit" else False
+            if self.device == "gpu-8bit":
+                kwargs['load_in_8bit'] = True
+            if self.device == "gpu-4bit":
+                kwargs['load_in_4bit'] = True
             kwargs['device_map'] = "auto"
         return args, kwargs
 
