@@ -24,6 +24,7 @@ def _results_to_docs(results: Any) -> List[Document]:
 
 
 def _results_to_docs_and_scores(results: Any) -> List[Tuple[Document, float]]:
+    """Convert results to a list of documents."""
     return [
         # TODO: Chroma can do batch querying,
         # we shouldn't hard code to the 1st result
@@ -48,7 +49,22 @@ class Chroma(VectorStore):
         collection_metadata: Optional[Dict] = None,
         client: Optional[chromadb.Client] = None,
     ) -> None:
-        """Initialize with Chroma client."""
+        """
+        Initialize Chroma with the provided settings.
+
+        :param collection_name: Name of the collection, defaults to "gentopia".
+        :type collection_name: str, optional
+        :param embedding_function: Embedding function, defaults to None.
+        :type embedding_function: Optional[Embeddings], optional
+        :param persist_directory: Directory to persist the collection, defaults to None.
+        :type persist_directory: Optional[str], optional
+        :param client_settings: Chroma client settings, defaults to None.
+        :type client_settings: Optional[chromadb.config.Settings], optional
+        :param collection_metadata: Metadata for the collection, defaults to None.
+        :type collection_metadata: Optional[Dict], optional
+        :param client: Chroma client object, defaults to None.
+        :type client: Optional[chromadb.Client], optional
+        """
         try:
             import chromadb
             import chromadb.config
@@ -89,15 +105,17 @@ class Chroma(VectorStore):
         ids: Optional[List[str]] = None,
         **kwargs: Any,
     ) -> List[str]:
-        """Run more texts through the embeddings and add to the vectorstore.
+        """
+        Run more texts through the embeddings and add them to the vectorstore.
 
-        Args:
-            texts (Iterable[str]): Texts to add to the vectorstore.
-            metadatas (Optional[List[dict]], optional): Optional list of metadatas.
-            ids (Optional[List[str]], optional): Optional list of IDs.
-
-        Returns:
-            List[str]: List of IDs of the added texts.
+        :param texts: Texts to add to the vectorstore.
+        :type texts: Iterable[str]
+        :param metadatas: Optional list of metadatas, defaults to None.
+        :type metadatas: Optional[List[dict]], optional
+        :param ids: Optional list of IDs, defaults to None.
+        :type ids: Optional[List[str]], optional
+        :return: List of IDs of the added texts.
+        :rtype: List[str]
         """
         # TODO: Handle the case where the user doesn't provide ids on the Collection
         if ids is None:
@@ -117,15 +135,17 @@ class Chroma(VectorStore):
         filter: Optional[Dict[str, str]] = None,
         **kwargs: Any,
     ) -> List[Document]:
-        """Run similarity search with Chroma.
+        """
+        Run similarity search with Chroma.
 
-        Args:
-            query (str): Query text to search for.
-            k (int): Number of results to return. Defaults to 4.
-            filter (Optional[Dict[str, str]]): Filter by metadata. Defaults to None.
-
-        Returns:
-            List[Document]: List of documents most similar to the query text.
+        :param query: Query text to search for.
+        :type query: str
+        :param k: Number of results to return, defaults to 4.
+        :type k: int, optional
+        :param filter: Filter by metadata, defaults to None.
+        :type filter: Optional[Dict[str, str]], optional
+        :return: List of documents most similar to the query text.
+        :rtype: List[Document]
         """
         docs_and_scores = self.similarity_search_with_score(query, k, filter=filter)
         return [doc for doc, _ in docs_and_scores]
@@ -137,12 +157,17 @@ class Chroma(VectorStore):
         filter: Optional[Dict[str, str]] = None,
         **kwargs: Any,
     ) -> List[Document]:
-        """Return docs most similar to embedding vector.
-        Args:
-            embedding: Embedding to look up documents similar to.
-            k: Number of Documents to return. Defaults to 4.
-        Returns:
-            List of Documents most similar to the query vector.
+        """
+        Return documents most similar to the embedding vector.
+
+        :param embedding: Embedding to look up documents similar to.
+        :type embedding: List[float]
+        :param k: Number of Documents to return, defaults to 4.
+        :type k: int, optional
+        :param filter: Filter by metadata, defaults to None.
+        :type filter: Optional[Dict[str, str]], optional
+        :return: List of Documents most similar to the query vector.
+        :rtype: List[Document]
         """
         results = self._collection.query(
             query_embeddings=embedding, n_results=k, where=filter
@@ -156,16 +181,17 @@ class Chroma(VectorStore):
         filter: Optional[Dict[str, str]] = None,
         **kwargs: Any,
     ) -> List[Tuple[Document, float]]:
-        """Run similarity search with Chroma with distance.
+        """
+        Run similarity search with Chroma with distance.
 
-        Args:
-            query (str): Query text to search for.
-            k (int): Number of results to return. Defaults to 4.
-            filter (Optional[Dict[str, str]]): Filter by metadata. Defaults to None.
-
-        Returns:
-            List[Tuple[Document, float]]: List of documents most similar to the query
-                text with distance in float.
+        :param query: Query text to search for.
+        :type query: str
+        :param k: Number of results to return, defaults to 4.
+        :type k: int, optional
+        :param filter: Filter by metadata, defaults to None.
+        :type filter: Optional[Dict[str, str]], optional
+        :return: List of documents most similar to the query text with distance in float.
+        :rtype: List[Tuple[Document, float]]
         """
         if self._embedding_function is None:
             results = self._collection.query(
@@ -187,16 +213,21 @@ class Chroma(VectorStore):
         filter: Optional[Dict[str, str]] = None,
         **kwargs: Any,
     ) -> List[Document]:
-        """Return docs selected using the maximal marginal relevance.
-        Maximal marginal relevance optimizes for similarity to query AND diversity
-        among selected documents.
-        Args:
-            embedding: Embedding to look up documents similar to.
-            k: Number of Documents to return. Defaults to 4.
-            fetch_k: Number of Documents to fetch to pass to MMR algorithm.
-            filter (Optional[Dict[str, str]]): Filter by metadata. Defaults to None.
-        Returns:
-            List of Documents selected by maximal marginal relevance.
+        """
+        Return documents selected using the maximal marginal relevance.
+
+        Maximal marginal relevance optimizes for similarity to query AND diversity among selected documents.
+
+        :param embedding: Embedding to look up documents similar to.
+        :type embedding: List[float]
+        :param k: Number of Documents to return, defaults to 4.
+        :type k: int, optional
+        :param fetch_k: Number of Documents to fetch to pass to MMR algorithm.
+        :type fetch_k: int, optional
+        :param filter: Filter by metadata, defaults to None.
+        :type filter: Optional[Dict[str, str]], optional
+        :return: List of Documents selected by maximal marginal relevance.
+        :rtype: List[Document]
         """
 
         results = self._collection.query(
@@ -222,16 +253,21 @@ class Chroma(VectorStore):
         filter: Optional[Dict[str, str]] = None,
         **kwargs: Any,
     ) -> List[Document]:
-        """Return docs selected using the maximal marginal relevance.
-        Maximal marginal relevance optimizes for similarity to query AND diversity
-        among selected documents.
-        Args:
-            query: Text to look up documents similar to.
-            k: Number of Documents to return. Defaults to 4.
-            fetch_k: Number of Documents to fetch to pass to MMR algorithm.
-            filter (Optional[Dict[str, str]]): Filter by metadata. Defaults to None.
-        Returns:
-            List of Documents selected by maximal marginal relevance.
+        """
+        Return documents selected using the maximal marginal relevance.
+
+        Maximal marginal relevance optimizes for similarity to query AND diversity among selected documents.
+
+        :param query: Text to look up documents similar to.
+        :type query: str
+        :param k: Number of Documents to return, defaults to 4.
+        :type k: int, optional
+        :param fetch_k: Number of Documents to fetch to pass to MMR algorithm.
+        :type fetch_k: int, optional
+        :param filter: Filter by metadata, defaults to None.
+        :type filter: Optional[Dict[str, str]], optional
+        :return: List of Documents selected by maximal marginal relevance.
+        :rtype: List[Document]
         """
         if self._embedding_function is None:
             raise ValueError(
@@ -274,22 +310,30 @@ class Chroma(VectorStore):
         client: Optional[chromadb.Client] = None,
         **kwargs: Any,
     ) -> Chroma:
-        """Create a Chroma vectorstore from a raw documents.
+        """
+        Create a Chroma vectorstore from a list of raw documents.
 
         If a persist_directory is specified, the collection will be persisted there.
         Otherwise, the data will be ephemeral in-memory.
 
-        Args:
-            texts (List[str]): List of texts to add to the collection.
-            collection_name (str): Name of the collection to create.
-            persist_directory (Optional[str]): Directory to persist the collection.
-            embedding (Optional[Embeddings]): Embedding function. Defaults to None.
-            metadatas (Optional[List[dict]]): List of metadatas. Defaults to None.
-            ids (Optional[List[str]]): List of document IDs. Defaults to None.
-            client_settings (Optional[chromadb.config.Settings]): Chroma client settings
-
-        Returns:
-            Chroma: Chroma vectorstore.
+        :param texts: List of texts to add to the collection.
+        :type texts: List[str]
+        :param embedding: Embedding function, defaults to None.
+        :type embedding: Optional[Embeddings], optional
+        :param metadatas: List of metadatas, defaults to None.
+        :type metadatas: Optional[List[dict]], optional
+        :param ids: List of document IDs, defaults to None.
+        :type ids: Optional[List[str]], optional
+        :param collection_name: Name of the collection to create, defaults to "gentopia".
+        :type collection_name: str, optional
+        :param persist_directory: Directory to persist the collection, defaults to None.
+        :type persist_directory: Optional[str], optional
+        :param client_settings: Chroma client settings, defaults to None.
+        :type client_settings: Optional[chromadb.config.Settings], optional
+        :param client: Chroma client object, defaults to None.
+        :type client: Optional[chromadb.Client], optional
+        :return: Chroma vectorstore.
+        :rtype: Chroma
         """
         chroma_collection = cls(
             collection_name=collection_name,
@@ -313,20 +357,28 @@ class Chroma(VectorStore):
         client: Optional[chromadb.Client] = None,  # Add this line
         **kwargs: Any,
     ) -> Chroma:
-        """Create a Chroma vectorstore from a list of documents.
+        """
+        Create a Chroma vectorstore from a list of documents.
 
         If a persist_directory is specified, the collection will be persisted there.
         Otherwise, the data will be ephemeral in-memory.
 
-        Args:
-            collection_name (str): Name of the collection to create.
-            persist_directory (Optional[str]): Directory to persist the collection.
-            ids (Optional[List[str]]): List of document IDs. Defaults to None.
-            documents (List[Document]): List of documents to add to the vectorstore.
-            embedding (Optional[Embeddings]): Embedding function. Defaults to None.
-            client_settings (Optional[chromadb.config.Settings]): Chroma client settings
-        Returns:
-            Chroma: Chroma vectorstore.
+        :param collection_name: Name of the collection to create.
+        :type collection_name: str
+        :param persist_directory: Directory to persist the collection.
+        :type persist_directory: Optional[str]
+        :param ids: List of document IDs, defaults to None.
+        :type ids: Optional[List[str]]
+        :param documents: List of documents to add to the vectorstore.
+        :type documents: List[Document]
+        :param embedding: Embedding function, defaults to None.
+        :type embedding: Optional[Embeddings]
+        :param client_settings: Chroma client settings
+        :type client_settings: Optional[chromadb.config.Settings]
+        :param client: Chroma client object, defaults to None.
+        :type client: Optional[chromadb.Client]
+        :return: Chroma vectorstore.
+        :rtype: Chroma
         """
         texts = [doc.page_content for doc in documents]
         metadatas = [doc.metadata for doc in documents]

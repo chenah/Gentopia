@@ -28,7 +28,18 @@ class Pinecone(VectorStore):
         text_key: str,
         namespace: Optional[str] = None,
     ):
-        """Initialize with Pinecone client."""
+        """
+        Initialize with Pinecone client.
+
+        :param index: Pinecone index object.
+        :type index: Any
+        :param embedding_function: Function to obtain embeddings.
+        :type embedding_function: Callable
+        :param text_key: Key for the text content in the metadata.
+        :type text_key: str
+        :param namespace: Pinecone namespace, defaults to None.
+        :type namespace: Optional[str], optional
+        """
         try:
             import pinecone
         except ImportError:
@@ -55,17 +66,21 @@ class Pinecone(VectorStore):
         batch_size: int = 32,
         **kwargs: Any,
     ) -> List[str]:
-        """Run more texts through the embeddings and add to the vectorstore.
+        """
+        Run more texts through the embeddings and add to the vectorstore.
 
-        Args:
-            texts: Iterable of strings to add to the vectorstore.
-            metadatas: Optional list of metadatas associated with the texts.
-            ids: Optional list of ids to associate with the texts.
-            namespace: Optional pinecone namespace to add the texts to.
-
-        Returns:
-            List of ids from adding the texts into the vectorstore.
-
+        :param texts: Iterable of strings to add to the vectorstore.
+        :type texts: Iterable[str]
+        :param metadatas: Optional list of metadatas associated with the texts, defaults to None.
+        :type metadatas: Optional[List[dict]], optional
+        :param ids: Optional list of ids to associate with the texts, defaults to None.
+        :type ids: Optional[List[str]], optional
+        :param namespace: Optional pinecone namespace to add the texts to, defaults to None.
+        :type namespace: Optional[str], optional
+        :param batch_size: Batch size for upserting, defaults to 32.
+        :type batch_size: int, optional
+        :return: List of ids from adding the texts into the vectorstore.
+        :rtype: List[str]
         """
         if namespace is None:
             namespace = self._namespace
@@ -89,16 +104,19 @@ class Pinecone(VectorStore):
         filter: Optional[dict] = None,
         namespace: Optional[str] = None,
     ) -> List[Tuple[Document, float]]:
-        """Return pinecone documents most similar to query, along with scores.
+        """
+        Return pinecone documents most similar to query, along with scores.
 
-        Args:
-            query: Text to look up documents similar to.
-            k: Number of Documents to return. Defaults to 4.
-            filter: Dictionary of argument(s) to filter on metadata
-            namespace: Namespace to search in. Default will search in '' namespace.
-
-        Returns:
-            List of Documents most similar to the query and score for each
+        :param query: Text to look up documents similar to.
+        :type query: str
+        :param k: Number of Documents to return, defaults to 4.
+        :type k: int, optional
+        :param filter: Dictionary of argument(s) to filter on metadata
+        :type filter: Optional[dict], optional
+        :param namespace: Namespace to search in. Default will search in '' namespace.
+        :type namespace: Optional[str], optional
+        :return: List of Documents most similar to the query and score for each
+        :rtype: List[Tuple[Document, float]]
         """
         if namespace is None:
             namespace = self._namespace
@@ -132,16 +150,19 @@ class Pinecone(VectorStore):
         namespace: Optional[str] = None,
         **kwargs: Any,
     ) -> List[Document]:
-        """Return pinecone documents most similar to query.
+        """
+        Return pinecone documents most similar to query.
 
-        Args:
-            query: Text to look up documents similar to.
-            k: Number of Documents to return. Defaults to 4.
-            filter: Dictionary of argument(s) to filter on metadata
-            namespace: Namespace to search in. Default will search in '' namespace.
-
-        Returns:
-            List of Documents most similar to the query and score for each
+        :param query: Text to look up documents similar to.
+        :type query: str
+        :param k: Number of Documents to return, defaults to 4.
+        :type k: int, optional
+        :param filter: Dictionary of argument(s) to filter on metadata
+        :type filter: Optional[dict], optional
+        :param namespace: Namespace to search in. Default will search in '' namespace.
+        :type namespace: Optional[str], optional
+        :return: List of Documents most similar to the query and score for each
+        :rtype: List[Document]
         """
         docs_and_scores = self.similarity_search_with_score(
             query, k=k, filter=filter, namespace=namespace, **kwargs
@@ -166,21 +187,29 @@ class Pinecone(VectorStore):
         namespace: Optional[str] = None,
         **kwargs: Any,
     ) -> List[Document]:
-        """Return docs selected using the maximal marginal relevance.
+        """
+        Return docs selected using the maximal marginal relevance.
 
         Maximal marginal relevance optimizes for similarity to query AND diversity
         among selected documents.
 
-        Args:
-            embedding: Embedding to look up documents similar to.
-            k: Number of Documents to return. Defaults to 4.
-            fetch_k: Number of Documents to fetch to pass to MMR algorithm.
-            lambda_mult: Number between 0 and 1 that determines the degree
-                        of diversity among the results with 0 corresponding
-                        to maximum diversity and 1 to minimum diversity.
-                        Defaults to 0.5.
-        Returns:
-            List of Documents selected by maximal marginal relevance.
+        :param embedding: Embedding to look up documents similar to.
+        :type embedding: List[float]
+        :param k: Number of Documents to return, defaults to 4.
+        :type k: int, optional
+        :param fetch_k: Number of Documents to fetch to pass to MMR algorithm.
+        :type fetch_k: int, optional
+        :param lambda_mult: Number between 0 and 1 that determines the degree
+                            of diversity among the results with 0 corresponding
+                            to maximum diversity and 1 to minimum diversity.
+                            Defaults to 0.5.
+        :type lambda_mult: float, optional
+        :param filter: Dictionary of argument(s) to filter on metadata, defaults to None.
+        :type filter: Optional[dict], optional
+        :param namespace: Namespace to search in. Default will search in '' namespace.
+        :type namespace: Optional[str], optional
+        :return: List of Documents selected by maximal marginal relevance.
+        :rtype: List[Document]
         """
         if namespace is None:
             namespace = self._namespace
@@ -215,21 +244,29 @@ class Pinecone(VectorStore):
         namespace: Optional[str] = None,
         **kwargs: Any,
     ) -> List[Document]:
-        """Return docs selected using the maximal marginal relevance.
+        """
+        Return docs selected using the maximal marginal relevance.
 
         Maximal marginal relevance optimizes for similarity to query AND diversity
         among selected documents.
 
-        Args:
-            query: Text to look up documents similar to.
-            k: Number of Documents to return. Defaults to 4.
-            fetch_k: Number of Documents to fetch to pass to MMR algorithm.
-            lambda_mult: Number between 0 and 1 that determines the degree
-                        of diversity among the results with 0 corresponding
-                        to maximum diversity and 1 to minimum diversity.
-                        Defaults to 0.5.
-        Returns:
-            List of Documents selected by maximal marginal relevance.
+        :param query: Text to look up documents similar to.
+        :type query: str
+        :param k: Number of Documents to return, defaults to 4.
+        :type k: int, optional
+        :param fetch_k: Number of Documents to fetch to pass to MMR algorithm.
+        :type fetch_k: int, optional
+        :param lambda_mult: Number between 0 and 1 that determines the degree
+                            of diversity among the results with 0 corresponding
+                            to maximum diversity and 1 to minimum diversity.
+                            Defaults to 0.5.
+        :type lambda_mult: float, optional
+        :param filter: Dictionary of argument(s) to filter on metadata, defaults to None.
+        :type filter: Optional[dict], optional
+        :param namespace: Namespace to search in. Default will search in '' namespace.
+        :type namespace: Optional[str], optional
+        :return: List of Documents selected by maximal marginal relevance.
+        :rtype: List[Document]
         """
         embedding = self._embedding_function(query)
         return self.max_marginal_relevance_search_by_vector(
@@ -249,7 +286,28 @@ class Pinecone(VectorStore):
         namespace: Optional[str] = None,
         **kwargs: Any,
     ) -> Pinecone:
-        """Construct Pinecone wrapper from raw documents."""
+        """
+        Construct Pinecone wrapper from raw documents.
+
+        :param texts: List of texts to add to the vectorstore.
+        :type texts: List[str]
+        :param embedding: Embeddings object.
+        :type embedding: Embeddings
+        :param metadatas: Optional list of metadatas associated with the texts, defaults to None.
+        :type metadatas: Optional[List[dict]], optional
+        :param ids: Optional list of ids to associate with the texts, defaults to None.
+        :type ids: Optional[List[str]], optional
+        :param batch_size: Batch size for upserting, defaults to 32.
+        :type batch_size: int, optional
+        :param text_key: Key for the text content in the metadata, defaults to "text".
+        :type text_key: str, optional
+        :param index_name: Name of the Pinecone index, defaults to None.
+        :type index_name: Optional[str], optional
+        :param namespace: Namespace for the index, defaults to None.
+        :type namespace: Optional[str], optional
+        :return: Initialized Pinecone object.
+        :rtype: Pinecone
+        """
         try:
             import pinecone
         except ImportError:
@@ -306,7 +364,20 @@ class Pinecone(VectorStore):
         text_key: str = "text",
         namespace: Optional[str] = None,
     ) -> Pinecone:
-        """Load pinecone vectorstore from index name."""
+        """
+        Load pinecone vectorstore from index name.
+
+        :param index_name: Name of the Pinecone index.
+        :type index_name: str
+        :param embedding: Embeddings object.
+        :type embedding: Embeddings
+        :param text_key: Key for the text content in the metadata, defaults to "text".
+        :type text_key: str, optional
+        :param namespace: Namespace for the index, defaults to None.
+        :type namespace: Optional[str], optional
+        :return: Initialized Pinecone object.
+        :rtype: Pinecone
+        """
         try:
             import pinecone
         except ImportError:
