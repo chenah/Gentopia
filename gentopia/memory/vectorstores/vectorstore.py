@@ -38,15 +38,20 @@ class VectorStore(ABC):
         metadatas: Optional[List[dict]] = None,
         **kwargs: Any,
     ) -> List[str]:
-        """Run more texts through the embeddings and add to the vectorstore.
+        """
+        Run more texts through the embeddings and add to the vector store.
 
-        Args:
-            texts: Iterable of strings to add to the vectorstore.
-            metadatas: Optional list of metadatas associated with the texts.
-            kwargs: vectorstore specific parameters
+        :param texts: Iterable of strings to add to the vector store.
+        :type texts: Iterable[str]
 
-        Returns:
-            List of ids from adding the texts into the vectorstore.
+        :param metadatas: Optional list of metadatas associated with the texts.
+        :type metadatas: Optional[List[dict]]
+
+        :param kwargs: Vector store specific parameters.
+        :type kwargs: Any
+
+        :return: List of IDs from adding the texts into the vector store.
+        :rtype: List[str]
         """
 
     async def aadd_texts(
@@ -55,17 +60,35 @@ class VectorStore(ABC):
         metadatas: Optional[List[dict]] = None,
         **kwargs: Any,
     ) -> List[str]:
-        """Run more texts through the embeddings and add to the vectorstore."""
+        """
+        Run more texts through the embeddings and add to the vector store (asynchronous version).
+
+        :param texts: Iterable of strings to add to the vector store.
+        :type texts: Iterable[str]
+
+        :param metadatas: Optional list of metadatas associated with the texts.
+        :type metadatas: Optional[List[dict]]
+
+        :param kwargs: Vector store specific parameters.
+        :type kwargs: Any
+
+        :return: List of IDs from adding the texts into the vector store.
+        :rtype: List[str]
+        """
         raise NotImplementedError
 
     def add_documents(self, documents: List[Document], **kwargs: Any) -> List[str]:
-        """Run more documents through the embeddings and add to the vectorstore.
+        """
+        Run more documents through the embeddings and add to the vector store.
 
-        Args:
-            documents (List[Document]: Documents to add to the vectorstore.
+        :param documents: Documents to add to the vector store.
+        :type documents: List[Document]
 
-        Returns:
-            List[str]: List of IDs of the added texts.
+        :param kwargs: Vector store specific parameters.
+        :type kwargs: Any
+
+        :return: List of IDs of the added texts.
+        :rtype: List[str]
         """
         # TODO: Handle the case where the user doesn't provide ids on the Collection
         texts = [doc.page_content for doc in documents]
@@ -75,20 +98,38 @@ class VectorStore(ABC):
     async def aadd_documents(
         self, documents: List[Document], **kwargs: Any
     ) -> List[str]:
-        """Run more documents through the embeddings and add to the vectorstore.
+        """
+        Run more documents through the embeddings and add to the vector store (asynchronous version).
 
-        Args:
-            documents (List[Document]: Documents to add to the vectorstore.
+        :param documents: Documents to add to the vector store.
+        :type documents: List[Document]
 
-        Returns:
-            List[str]: List of IDs of the added texts.
+        :param kwargs: Vector store specific parameters.
+        :type kwargs: Any
+
+        :return: List of IDs of the added texts.
+        :rtype: List[str]
         """
         texts = [doc.page_content for doc in documents]
         metadatas = [doc.metadata for doc in documents]
         return await self.aadd_texts(texts, metadatas, **kwargs)
 
     def search(self, query: str, search_type: str, **kwargs: Any) -> List[Document]:
-        """Return docs most similar to query using specified search type."""
+        """
+        Return documents most similar to the query using the specified search type.
+
+        :param query: The query string.
+        :type query: str
+
+        :param search_type: The search type. Valid values are 'similarity' or 'mmr'.
+        :type search_type: str
+
+        :param kwargs: Search-specific parameters.
+        :type kwargs: Any
+
+        :return: List of documents most similar to the query.
+        :rtype: List[Document]
+        """
         if search_type == "similarity":
             return self.similarity_search(query, **kwargs)
         elif search_type == "mmr":
@@ -102,7 +143,21 @@ class VectorStore(ABC):
     async def asearch(
         self, query: str, search_type: str, **kwargs: Any
     ) -> List[Document]:
-        """Return docs most similar to query using specified search type."""
+        """
+        Return documents most similar to the query using the specified search type (asynchronous version).
+
+        :param query: The query string.
+        :type query: str
+
+        :param search_type: The search type. Valid values are 'similarity' or 'mmr'.
+        :type search_type: str
+
+        :param kwargs: Search-specific parameters.
+        :type kwargs: Any
+
+        :return: List of documents most similar to the query.
+        :rtype: List[Document]
+        """
         if search_type == "similarity":
             return await self.asimilarity_search(query, **kwargs)
         elif search_type == "mmr":
@@ -117,7 +172,21 @@ class VectorStore(ABC):
     def similarity_search(
         self, query: str, k: int = 4, **kwargs: Any
     ) -> List[Document]:
-        """Return docs most similar to query."""
+        """
+        Return documents most similar to the query.
+
+        :param query: The query string.
+        :type query: str
+
+        :param k: Number of documents to return. Defaults to 4.
+        :type k: int
+
+        :param kwargs: Additional search-specific parameters.
+        :type kwargs: Any
+
+        :return: List of documents most similar to the query.
+        :rtype: List[Document]
+        """
 
     def similarity_search_with_relevance_scores(
         self,
@@ -125,19 +194,22 @@ class VectorStore(ABC):
         k: int = 4,
         **kwargs: Any,
     ) -> List[Tuple[Document, float]]:
-        """Return docs and relevance scores in the range [0, 1].
+        """
+        Return documents and their relevance scores in the range [0, 1].
 
-        0 is dissimilar, 1 is most similar.
+        A relevance score of 0 indicates dissimilarity, while a score of 1 indicates maximum similarity.
 
-        Args:
-            query: input text
-            k: Number of Documents to return. Defaults to 4.
-            **kwargs: kwargs to be passed to similarity search. Should include:
-                score_threshold: Optional, a floating point value between 0 to 1 to
-                    filter the resulting set of retrieved docs
+        :param query: The query string.
+        :type query: str
 
-        Returns:
-            List of Tuples of (doc, similarity_score)
+        :param k: Number of documents to return. Defaults to 4.
+        :type k: int
+
+        :param kwargs: Additional search-specific parameters.
+        :type kwargs: Any
+
+        :return: List of tuples of (document, similarity_score).
+        :rtype: List[Tuple[Document, float]]
         """
         docs_and_similarities = self._similarity_search_with_relevance_scores(
             query, k=k, **kwargs
@@ -171,16 +243,45 @@ class VectorStore(ABC):
         k: int = 4,
         **kwargs: Any,
     ) -> List[Tuple[Document, float]]:
-        """Return docs and relevance scores, normalized on a scale from 0 to 1.
+        """
+        Return documents and their relevance scores in the range [0, 1].
 
-        0 is dissimilar, 1 is most similar.
+        A relevance score of 0 indicates dissimilarity, while a score of 1 indicates maximum similarity.
+
+        :param query: The query string.
+        :type query: str
+
+        :param k: Number of documents to return. Defaults to 4.
+        :type k: int
+
+        :param kwargs: Additional search-specific parameters.
+        :type kwargs: Any
+
+        :return: List of tuples of (document, similarity_score).
+        :rtype: List[Tuple[Document, float]]
         """
         raise NotImplementedError
 
     async def asimilarity_search_with_relevance_scores(
         self, query: str, k: int = 4, **kwargs: Any
     ) -> List[Tuple[Document, float]]:
-        """Return docs most similar to query."""
+        """
+        Return documents and their relevance scores in the range [0, 1] (asynchronous version).
+
+        A relevance score of 0 indicates dissimilarity, while a score of 1 indicates maximum similarity.
+
+        :param query: The query string.
+        :type query: str
+
+        :param k: Number of documents to return. Defaults to 4.
+        :type k: int
+
+        :param kwargs: Additional search-specific parameters.
+        :type kwargs: Any
+
+        :return: List of tuples of (document, similarity_score).
+        :rtype: List[Tuple[Document, float]]
+        """
 
         # This is a temporary workaround to make the similarity search
         # asynchronous. The proper solution is to make the similarity search
@@ -192,7 +293,21 @@ class VectorStore(ABC):
     async def asimilarity_search(
         self, query: str, k: int = 4, **kwargs: Any
     ) -> List[Document]:
-        """Return docs most similar to query."""
+        """
+        Return documents most similar to the query (asynchronous version).
+
+        :param query: The query string.
+        :type query: str
+
+        :param k: Number of documents to return. Defaults to 4.
+        :type k: int
+
+        :param kwargs: Additional search-specific parameters.
+        :type kwargs: Any
+
+        :return: List of documents most similar to the query.
+        :rtype: List[Document]
+        """
 
         # This is a temporary workaround to make the similarity search
         # asynchronous. The proper solution is to make the similarity search
@@ -203,21 +318,41 @@ class VectorStore(ABC):
     def similarity_search_by_vector(
         self, embedding: List[float], k: int = 4, **kwargs: Any
     ) -> List[Document]:
-        """Return docs most similar to embedding vector.
+        """
+        Return documents most similar to the embedding vector.
 
-        Args:
-            embedding: Embedding to look up documents similar to.
-            k: Number of Documents to return. Defaults to 4.
+        :param embedding: The embedding vector to look up documents similar to.
+        :type embedding: List[float]
 
-        Returns:
-            List of Documents most similar to the query vector.
+        :param k: Number of documents to return. Defaults to 4.
+        :type k: int
+
+        :param kwargs: Additional search-specific parameters.
+        :type kwargs: Any
+
+        :return: List of documents most similar to the query vector.
+        :rtype: List[Document]
         """
         raise NotImplementedError
 
     async def asimilarity_search_by_vector(
         self, embedding: List[float], k: int = 4, **kwargs: Any
     ) -> List[Document]:
-        """Return docs most similar to embedding vector."""
+        """
+        Return documents most similar to the embedding vector (asynchronous version).
+
+        :param embedding: The embedding vector to look up documents similar to.
+        :type embedding: List[float]
+
+        :param k: Number of documents to return. Defaults to 4.
+        :type k: int
+
+        :param kwargs: Additional search-specific parameters.
+        :type kwargs: Any
+
+        :return: List of documents most similar to the query vector.
+        :rtype: List[Document]
+        """
 
         # This is a temporary workaround to make the similarity search
         # asynchronous. The proper solution is to make the similarity search
@@ -234,21 +369,29 @@ class VectorStore(ABC):
         lambda_mult: float = 0.5,
         **kwargs: Any,
     ) -> List[Document]:
-        """Return docs selected using the maximal marginal relevance.
+        """
+        Return documents selected using the maximal marginal relevance.
 
-        Maximal marginal relevance optimizes for similarity to query AND diversity
-        among selected documents.
+        Maximal marginal relevance optimizes for similarity to the query and diversity among the selected documents.
 
-        Args:
-            query: Text to look up documents similar to.
-            k: Number of Documents to return. Defaults to 4.
-            fetch_k: Number of Documents to fetch to pass to MMR algorithm.
-            lambda_mult: Number between 0 and 1 that determines the degree
-                        of diversity among the results with 0 corresponding
-                        to maximum diversity and 1 to minimum diversity.
-                        Defaults to 0.5.
-        Returns:
-            List of Documents selected by maximal marginal relevance.
+        :param query: The query string.
+        :type query: str
+
+        :param k: Number of documents to return. Defaults to 4.
+        :type k: int
+
+        :param fetch_k: Number of documents to fetch to pass to the MMR algorithm.
+        :type fetch_k: int
+
+        :param lambda_mult: Number between 0 and 1 that determines the degree of diversity among the results,
+            with 0 corresponding to maximum diversity and 1 to minimum diversity. Defaults to 0.5.
+        :type lambda_mult: float
+
+        :param kwargs: Additional search-specific parameters.
+        :type kwargs: Any
+
+        :return: List of documents selected by maximal marginal relevance.
+        :rtype: List[Document]
         """
         raise NotImplementedError
 
@@ -260,8 +403,28 @@ class VectorStore(ABC):
         lambda_mult: float = 0.5,
         **kwargs: Any,
     ) -> List[Document]:
-        """Return docs selected using the maximal marginal relevance."""
+        """
+        Return documents selected using the maximal marginal relevance (asynchronous version).
 
+        :param query: The query string.
+        :type query: str
+
+        :param k: Number of documents to return. Defaults to 4.
+        :type k: int
+
+        :param fetch_k: Number of documents to fetch to pass to the MMR algorithm.
+        :type fetch_k: int
+
+        :param lambda_mult: Number between 0 and 1 that determines the degree of diversity among the results,
+            with 0 corresponding to maximum diversity and 1 to minimum diversity. Defaults to 0.5.
+        :type lambda_mult: float
+
+        :param kwargs: Additional search-specific parameters.
+        :type kwargs: Any
+
+        :return: List of documents selected by maximal marginal relevance.
+        :rtype: List[Document]
+        """
         # This is a temporary workaround to make the similarity search
         # asynchronous. The proper solution is to make the similarity search
         # asynchronous in the vector store implementations.
@@ -278,21 +441,29 @@ class VectorStore(ABC):
         lambda_mult: float = 0.5,
         **kwargs: Any,
     ) -> List[Document]:
-        """Return docs selected using the maximal marginal relevance.
+        """
+        Return documents selected using the maximal marginal relevance.
 
-        Maximal marginal relevance optimizes for similarity to query AND diversity
-        among selected documents.
+        Maximal marginal relevance optimizes for similarity to the embedding vector and diversity among the selected documents.
 
-        Args:
-            embedding: Embedding to look up documents similar to.
-            k: Number of Documents to return. Defaults to 4.
-            fetch_k: Number of Documents to fetch to pass to MMR algorithm.
-            lambda_mult: Number between 0 and 1 that determines the degree
-                        of diversity among the results with 0 corresponding
-                        to maximum diversity and 1 to minimum diversity.
-                        Defaults to 0.5.
-        Returns:
-            List of Documents selected by maximal marginal relevance.
+        :param embedding: The embedding vector to look up documents similar to.
+        :type embedding: List[float]
+
+        :param k: Number of documents to return. Defaults to 4.
+        :type k: int
+
+        :param fetch_k: Number of documents to fetch to pass to the MMR algorithm.
+        :type fetch_k: int
+
+        :param lambda_mult: Number between 0 and 1 that determines the degree of diversity among the results,
+            with 0 corresponding to maximum diversity and 1 to minimum diversity. Defaults to 0.5.
+        :type lambda_mult: float
+
+        :param kwargs: Additional search-specific parameters.
+        :type kwargs: Any
+
+        :return: List of documents selected by maximal marginal relevance.
+        :rtype: List[Document]
         """
         raise NotImplementedError
 
@@ -304,7 +475,28 @@ class VectorStore(ABC):
         lambda_mult: float = 0.5,
         **kwargs: Any,
     ) -> List[Document]:
-        """Return docs selected using the maximal marginal relevance."""
+        """
+        Return documents selected using the maximal marginal relevance (asynchronous version).
+
+        :param embedding: The embedding vector to look up documents similar to.
+        :type embedding: List[float]
+
+        :param k: Number of documents to return. Defaults to 4.
+        :type k: int
+
+        :param fetch_k: Number of documents to fetch to pass to the MMR algorithm.
+        :type fetch_k: int
+
+        :param lambda_mult: Number between 0 and 1 that determines the degree of diversity among the results,
+            with 0 corresponding to maximum diversity and 1 to minimum diversity. Defaults to 0.5.
+        :type lambda_mult: float
+
+        :param kwargs: Additional search-specific parameters.
+        :type kwargs: Any
+
+        :return: List of documents selected by maximal marginal relevance.
+        :rtype: List[Document]
+        """
         raise NotImplementedError
 
     @classmethod
@@ -314,7 +506,21 @@ class VectorStore(ABC):
         embedding: Embeddings,
         **kwargs: Any,
     ) -> VST:
-        """Return VectorStore initialized from documents and embeddings."""
+        """
+        Return a VectorStore initialized from a list of documents and embeddings.
+
+        :param documents: The list of documents.
+        :type documents: List[Document]
+
+        :param embedding: The embeddings object.
+        :type embedding: Embeddings
+
+        :param kwargs: Additional parameters specific to the VectorStore implementation.
+        :type kwargs: Any
+
+        :return: The initialized VectorStore.
+        :rtype: VectorStore
+        """
         texts = [d.page_content for d in documents]
         metadatas = [d.metadata for d in documents]
         return cls.from_texts(texts, embedding, metadatas=metadatas, **kwargs)
@@ -326,7 +532,21 @@ class VectorStore(ABC):
         embedding: Embeddings,
         **kwargs: Any,
     ) -> VST:
-        """Return VectorStore initialized from documents and embeddings."""
+        """
+        Return a VectorStore initialized from a list of documents and embeddings (asynchronous version).
+
+        :param documents: The list of documents.
+        :type documents: List[Document]
+
+        :param embedding: The embeddings object.
+        :type embedding: Embeddings
+
+        :param kwargs: Additional parameters specific to the VectorStore implementation.
+        :type kwargs: Any
+
+        :return: The initialized VectorStore.
+        :rtype: VectorStore
+        """
         texts = [d.page_content for d in documents]
         metadatas = [d.metadata for d in documents]
         return await cls.afrom_texts(texts, embedding, metadatas=metadatas, **kwargs)
@@ -340,7 +560,24 @@ class VectorStore(ABC):
         metadatas: Optional[List[dict]] = None,
         **kwargs: Any,
     ) -> VST:
-        """Return VectorStore initialized from texts and embeddings."""
+        """
+        Return a VectorStore initialized from a list of texts and embeddings.
+
+        :param texts: The list of texts.
+        :type texts: List[str]
+
+        :param embedding: The embeddings object.
+        :type embedding: Embeddings
+
+        :param metadatas: Optional list of metadatas associated with the texts.
+        :type metadatas: Optional[List[dict]]
+
+        :param kwargs: Additional parameters specific to the VectorStore implementation.
+        :type kwargs: Any
+
+        :return: The initialized VectorStore.
+        :rtype: VectorStore
+        """
 
     @classmethod
     async def afrom_texts(
@@ -350,33 +587,61 @@ class VectorStore(ABC):
         metadatas: Optional[List[dict]] = None,
         **kwargs: Any,
     ) -> VST:
-        """Return VectorStore initialized from texts and embeddings."""
+        """
+        Return a VectorStore initialized from a list of texts and embeddings (asynchronous version).
+
+        :param texts: The list of texts.
+        :type texts: List[str]
+
+        :param embedding: The embeddings object.
+        :type embedding: Embeddings
+
+        :param metadatas: Optional list of metadatas associated with the texts.
+        :type metadatas: Optional[List[dict]]
+
+        :param kwargs: Additional parameters specific to the VectorStore implementation.
+        :type kwargs: Any
+
+        :return: The initialized VectorStore.
+        :rtype: VectorStore
+        """
         raise NotImplementedError
 
     def as_retriever(self, **kwargs: Any) -> VectorStoreRetriever:
+        """
+        Return a VectorStoreRetriever instance for the VectorStore.
+
+        :param kwargs: Additional parameters for the VectorStoreRetriever.
+        :type kwargs: Any
+
+        :return: The VectorStoreRetriever instance.
+        :rtype: VectorStoreRetriever
+        """
         return VectorStoreRetriever(vectorstore=self, **kwargs)
 
 class BaseRetriever(ABC):
     @abstractmethod
     def get_relevant_documents(self, query: str) -> List[Document]:
-        """Get documents relevant for a query.
+        """
+        Get documents relevant for a query.
 
-        Args:
-            query: string to find relevant documents for
+        :param query: String to find relevant documents for.
+        :type query: str
 
-        Returns:
-            List of relevant documents
+        :return: List of relevant documents.
+        :rtype: List[Document]
         """
 
     @abstractmethod
     async def aget_relevant_documents(self, query: str) -> List[Document]:
-        """Get documents relevant for a query.
+        """
+        Get documents relevant for a query.
 
-        Args:
-            query: string to find relevant documents for
+        :param query: String to find relevant documents for.
+        :type query: str
 
-        Returns:
-            List of relevant documents
+        :return: List of relevant documents.
+        :rtype: List[Document]
         """
 
 class VectorStoreRetriever(BaseRetriever, BaseModel):
@@ -413,6 +678,15 @@ class VectorStoreRetriever(BaseRetriever, BaseModel):
         return values
 
     def get_relevant_documents(self, query: str) -> List[Document]:
+        """
+        Get documents relevant for a query.
+
+        :param query: String to find relevant documents for.
+        :type query: str
+
+        :return: List of relevant documents.
+        :rtype: List[Document]
+        """
         if self.search_type == "similarity":
             docs = self.vectorstore.similarity_search(
                 query, **self.search_kwargs)
@@ -432,6 +706,15 @@ class VectorStoreRetriever(BaseRetriever, BaseModel):
         return docs
 
     async def aget_relevant_documents(self, query: str) -> List[Document]:
+        """
+        Get documents relevant for a query.
+
+        :param query: String to find relevant documents for.
+        :type query: str
+
+        :return: List of relevant documents.
+        :rtype: List[Document]
+        """
         if self.search_type == "similarity":
             docs = await self.vectorstore.asimilarity_search(
                 query, **self.search_kwargs
@@ -452,13 +735,33 @@ class VectorStoreRetriever(BaseRetriever, BaseModel):
         return docs
 
     def add_documents(self, documents: List[Document], **kwargs: Any) -> List[str]:
-        """Add documents to vectorstore."""
+        """
+        Add documents to vectorstore.
+
+        :param documents: List of documents to add.
+        :type documents: List[Document]
+        :param kwargs: Additional keyword arguments.
+        :type kwargs: Any
+
+        :return: List of added document IDs.
+        :rtype: List[str]
+        """
         return self.vectorstore.add_documents(documents, **kwargs)
 
     async def aadd_documents(
         self, documents: List[Document], **kwargs: Any
     ) -> List[str]:
-        """Add documents to vectorstore."""
+        """
+        Add documents to vectorstore asynchronously.
+
+        :param documents: List of documents to add.
+        :type documents: List[Document]
+        :param kwargs: Additional keyword arguments.
+        :type kwargs: Any
+
+        :return: List of added document IDs.
+        :rtype: List[str]
+        """
         return await self.vectorstore.aadd_documents(documents, **kwargs)
     
 class VectorStoreRetrieverMemory(BaseMemory):
@@ -490,7 +793,15 @@ class VectorStoreRetrieverMemory(BaseMemory):
     def load_memory_variables(
         self, inputs: Dict[str, Any]
     ) -> Dict[str, Union[List[Document], str]]:
-        """Return history buffer."""
+        """
+        Return history buffer.
+
+        :param inputs: Dictionary of input values.
+        :type inputs: Dict[str, Any]
+
+        :return: Dictionary containing the memory variables.
+        :rtype: Dict[str, Union[List[Document], str]]
+        """
         input_key = self._get_prompt_input_key(inputs)
         query = inputs[input_key]
         docs = self.retriever.get_relevant_documents(query)
@@ -504,7 +815,17 @@ class VectorStoreRetrieverMemory(BaseMemory):
     def _form_documents(
         self, inputs: Dict[str, Any], outputs: Dict[str, str]
     ) -> List[Document]:
-        """Format context from this conversation to buffer."""
+        """
+        Format context from this conversation to buffer.
+
+        :param inputs: Dictionary of input values.
+        :type inputs: Dict[str, Any]
+        :param outputs: Dictionary of output values.
+        :type outputs: Dict[str, str]
+
+        :return: List of formatted documents.
+        :rtype: List[Document]
+        """
         # Each document should only include the current turn, not the chat history
         filtered_inputs = {k: v for k,
                            v in inputs.items() if k != self.memory_key}
@@ -516,7 +837,14 @@ class VectorStoreRetrieverMemory(BaseMemory):
         return [Document(page_content=page_content)]
 
     def save_context(self, inputs: Dict[str, Any], outputs: Dict[str, str]) -> None:
-        """Save context from this conversation to buffer."""
+        """
+        Save context from this conversation to buffer.
+
+        :param inputs: Dictionary of input values.
+        :type inputs: Dict[str, Any]
+        :param outputs: Dictionary of output values.
+        :type outputs: Dict[str, str]
+        """
         documents = self._form_documents(inputs, outputs)
         self.retriever.add_documents(documents)
 

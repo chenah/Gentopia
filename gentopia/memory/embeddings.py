@@ -35,18 +35,50 @@ class Embeddings(ABC):
 
     @abstractmethod
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        """Embed search docs."""
+        """
+        Embed search docs.
+
+        :param texts: The list of texts to embed.
+        :type texts: List[str]
+
+        :return: List of embeddings, one for each text.
+        :rtype: List[List[float]]
+        """
 
     @abstractmethod
     def embed_query(self, text: str) -> List[float]:
-        """Embed query text."""
+        """
+        Embed query text.
+
+        :param text: The text to embed.
+        :type text: str
+
+        :return: Embedding for the text.
+        :rtype: List[float]
+        """
 
     async def aembed_documents(self, texts: List[str]) -> List[List[float]]:
-        """Embed search docs."""
+        """
+        Embed search docs asynchronously.
+
+        :param texts: The list of texts to embed.
+        :type texts: List[str]
+
+        :return: List of embeddings, one for each text.
+        :rtype: List[List[float]]
+        """
         raise NotImplementedError
 
     async def aembed_query(self, text: str) -> List[float]:
-        """Embed query text."""
+        """
+        Embed query text asynchronously.
+
+        :param text: The text to embed.
+        :type text: str
+
+        :return: Embedding for the text.
+        :rtype: List[float]
+        """
         raise NotImplementedError
 
 
@@ -397,15 +429,17 @@ class OpenAIEmbeddings(BaseModel, Embeddings):
     def embed_documents(
         self, texts: List[str], chunk_size: Optional[int] = 0
     ) -> List[List[float]]:
-        """Call out to OpenAI's embedding endpoint for embedding search docs.
+        """
+        Embed search docs.
 
-        Args:
-            texts: The list of texts to embed.
-            chunk_size: The chunk size of embeddings. If None, will use the chunk size
-                specified by the class.
+        :param texts: The list of texts to embed.
+        :type texts: List[str]
+        :param chunk_size: The chunk size of embeddings. If None, will use the chunk size
+            specified by the class.
+        :type chunk_size: Optional[int], optional
 
-        Returns:
-            List of embeddings, one for each text.
+        :return: List of embeddings, one for each text.
+        :rtype: List[List[float]]
         """
         # NOTE: to keep things simple, we assume the list may contain texts longer
         #       than the maximum context and use length-safe embedding function.
@@ -414,40 +448,44 @@ class OpenAIEmbeddings(BaseModel, Embeddings):
     async def aembed_documents(
         self, texts: List[str], chunk_size: Optional[int] = 0
     ) -> List[List[float]]:
-        """Call out to OpenAI's embedding endpoint async for embedding search docs.
+        """
+        Embed search docs asynchronously.
 
-        Args:
-            texts: The list of texts to embed.
-            chunk_size: The chunk size of embeddings. If None, will use the chunk size
-                specified by the class.
+        :param texts: The list of texts to embed.
+        :type texts: List[str]
+        :param chunk_size: The chunk size of embeddings. If None, will use the chunk size
+            specified by the class.
+        :type chunk_size: Optional[int], optional
 
-        Returns:
-            List of embeddings, one for each text.
+        :return: List of embeddings, one for each text.
+        :rtype: List[List[float]]
         """
         # NOTE: to keep things simple, we assume the list may contain texts longer
         #       than the maximum context and use length-safe embedding function.
         return await self._aget_len_safe_embeddings(texts, engine=self.deployment)
 
     def embed_query(self, text: str) -> List[float]:
-        """Call out to OpenAI's embedding endpoint for embedding query text.
+        """
+        Embed query text.
 
-        Args:
-            text: The text to embed.
+        :param text: The text to embed.
+        :type text: str
 
-        Returns:
-            Embedding for the text.
+        :return: Embedding for the text.
+        :rtype: List[float]
         """
         embedding = self._embedding_func(text, engine=self.deployment)
         return embedding
 
     async def aembed_query(self, text: str) -> List[float]:
-        """Call out to OpenAI's embedding endpoint async for embedding query text.
+        """
+        Embed query text asynchronously.
 
-        Args:
-            text: The text to embed.
+        :param text: The text to embed.
+        :type text: str
 
-        Returns:
-            Embedding for the text.
+        :return: Embedding for the text.
+        :rtype: List[float]
         """
         embedding = await self._aembedding_func(text, engine=self.deployment)
         return embedding

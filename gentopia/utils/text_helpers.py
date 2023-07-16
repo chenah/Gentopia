@@ -5,11 +5,11 @@ def regularize_block(block):
     """
     Regularize a block by stripping and adding a newline character at the end.
 
-    Args:
-        block: The block of text to be regularized.
+    :param block: The block of text to be regularized.
+    :type block: str
 
-    Returns:
-        The regularized block with a newline character at the end.
+    :return: The regularized block with a newline character at the end.
+    :rtype: str
     """
     return block.strip("\n") + "\n"
 
@@ -18,11 +18,11 @@ def get_plugin_response_content(output) -> str:
     """
     Get the content of a plugin response.
 
-    Args:
-        output: The output from a plugin.
+    :param output: The output from a plugin.
+    :type output: Any
 
-    Returns:
-        The content of the plugin response as a string.
+    :return: The content of the plugin response as a string.
+    :rtype: str
     """
     if isinstance(output, AgentOutput):
         return output.output

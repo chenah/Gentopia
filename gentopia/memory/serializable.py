@@ -62,8 +62,7 @@ class Serializable(BaseModel, ABC):
         """
         Initialize the Serializable object.
 
-        Args:
-            **kwargs (Any): Keyword arguments to initialize the object.
+        :param kwargs: Keyword arguments to initialize the object.
         """
         super().__init__(**kwargs)
         self._gt_kwargs = kwargs
@@ -72,12 +71,12 @@ class Serializable(BaseModel, ABC):
         """
         Convert the object to JSON representation.
 
-        Returns:
-            Union[SerializedConstructor, SerializedNotImplemented]: The JSON representation.
+        :returns: The JSON representation.
+        :rtype: Union[SerializedConstructor, SerializedNotImplemented]
 
         Notes:
-            - If the object is not serializable, returns SerializedNotImplemented.
-            - If the object is serializable, returns SerializedConstructor.
+        - If the object is not serializable, returns SerializedNotImplemented.
+        - If the object is serializable, returns SerializedConstructor.
         """
         if not self.gt_serializable:
             return self.to_json_not_implemented()
@@ -123,8 +122,8 @@ class Serializable(BaseModel, ABC):
         """
         Convert the object to a not implemented JSON representation.
 
-        Returns:
-            SerializedNotImplemented: The not implemented JSON representation.
+        :returns: The not implemented JSON representation.
+        :rtype: SerializedNotImplemented
         """
         return to_json_not_implemented(self)
 
@@ -135,12 +134,12 @@ def _replace_secrets(
     """
     Replace secrets in the JSON representation.
 
-    Args:
-        root (Dict[Any, Any]): The root dictionary.
-        secrets_map (Dict[str, str]): The map of secrets.
-
-    Returns:
-        Dict[Any, Any]: The dictionary with replaced secrets.
+    :param root: The root dictionary.
+    :type root: Dict[Any, Any]
+    :param secrets_map: The map of secrets.
+    :type secrets_map: Dict[str, str]
+    :returns: The dictionary with replaced secrets.
+    :rtype: Dict[Any, Any]
     """
     result = root.copy()
     for path, secret_id in secrets_map.items():
@@ -164,11 +163,10 @@ def to_json_not_implemented(obj: object) -> SerializedNotImplemented:
     """
     Convert an object to a not implemented JSON representation.
 
-    Args:
-        obj (object): The object to convert.
-
-    Returns:
-        SerializedNotImplemented: The not implemented JSON representation.
+    :param obj: The object to convert.
+    :type obj: object
+    :returns: The not implemented JSON representation.
+    :rtype: SerializedNotImplemented
     """
     _id: List[str] = []
     try:

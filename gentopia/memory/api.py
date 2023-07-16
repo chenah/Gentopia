@@ -73,10 +73,12 @@ class MemoryWrapper:
         """
         Initialize the MemoryWrapper.
 
-        Args:
-            memory: The vector store retriever memory.
-            conversation_threshold: The conversation threshold.
-            reasoning_threshold: The reasoning threshold.
+        :param memory: The vector store retriever memory.
+        :type memory: VectorStoreRetrieverMemory
+        :param conversation_threshold: The conversation threshold.
+        :type conversation_threshold: int
+        :param reasoning_threshold: The reasoning threshold.
+        :type reasoning_threshold: int
         """
         self.memory = memory
         self.conversation_threshold = conversation_threshold
@@ -94,8 +96,8 @@ class MemoryWrapper:
         """
         Save the input-output pair to memory.
 
-        Args:
-            io_obj: The input-output pair.
+        :param io_obj: The input-output pair.
+        :type io_obj: Any
         """
         self.memory.save_context(io_obj[0], io_obj[1]) # (input, output)
     
@@ -103,11 +105,14 @@ class MemoryWrapper:
         """
         Save the conversation to memory (level I).
 
-        Args:
-            query: The query.
-            response: The response.
-            output: The output object.
+        :param query: The query.
+        :type query: Any
+        :param response: The response.
+        :type response: Any
+        :param output: The output object.
+        :type output: BaseOutput
         """
+
         output.update_status("Conversation Memorizing...")
         self.rank_I += 1
         self.history_queue_I.put((query, response, self.rank_I))
@@ -121,11 +126,14 @@ class MemoryWrapper:
         """
         Save the conversation to memory (level II).
 
-        Args:
-            query: The query.
-            response: The response.
-            output: The output object.
-            llm: The BaseLLM object.
+        :param query: The query.
+        :type query: Any
+        :param response: The response.
+        :type response: Any
+        :param output: The output object.
+        :type output: BaseOutput
+        :param llm: The BaseLLM object.
+        :type llm: BaseLLM
         """
         output.update_status("Reasoning Memorizing...")
         self.rank_II += 1
@@ -142,12 +150,13 @@ class MemoryWrapper:
         """
         Get the latest context history.
 
-        Args:
-            instruction: The instruction.
-            output: The output object.
+        :param instruction: The instruction.
+        :type instruction: Any
+        :param output: The output object.
+        :type output: BaseOutput
 
-        Returns:
-            The context history.
+        :return: The context history.
+        :rtype: List[Dict[str, Any]]
         """
         context_history = []
         # TODO this context_history can only be used in openai agent. This function should be more universal
@@ -186,11 +195,11 @@ class MemoryWrapper:
         """
         Load history from memory.
 
-        Args:
-            input: The input.
+        :param input: The input.
+        :type input: Any
 
-        Returns:
-            The loaded history.
+        :return: The loaded history.
+        :rtype: str
         """
         return self.memory.load_memory_variables({"query": input})['history']
 
@@ -199,14 +208,16 @@ def create_memory(memory_type, conversation_threshold, reasoning_threshold, **kw
     """
     Create a memory object.
 
-    Args:
-        memory_type: The type of memory.
-        conversation_threshold: The conversation threshold.
-        reasoning_threshold: The reasoning threshold.
-        **kwargs: Additional keyword arguments.
+    :param memory_type: The type of memory.
+    :type memory_type: str
+    :param conversation_threshold: The conversation threshold.
+    :type conversation_threshold: int
+    :param reasoning_threshold: The reasoning threshold.
+    :type reasoning_threshold: int
+    :param **kwargs: Additional keyword arguments.
 
-    Returns:
-        The created MemoryWrapper object.
+    :return: The created MemoryWrapper object.
+    :rtype: MemoryWrapper
     """
     # choose desirable memory you need!
     memory: BaseMemory = None

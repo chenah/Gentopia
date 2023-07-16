@@ -5,13 +5,15 @@ def calculate_cost(model_name: str, prompt_token: int, completion_token: int) ->
     """
     Calculate the cost of a prompt and completion.
 
-    Args:
-        model_name: The name of the model.
-        prompt_token: The number of prompt tokens.
-        completion_token: The number of completion tokens.
+    :param model_name: The name of the model.
+    :type model_name: str
+    :param prompt_token: The number of prompt tokens.
+    :type prompt_token: int
+    :param completion_token: The number of completion tokens.
+    :type completion_token: int
 
-    Returns:
-        The calculated cost.
+    :return: The calculated cost.
+    :rtype: float
     """
     # 0 if model_name is not in COSTS
     return COSTS.get(model_name, dict()).get("prompt", 0) * prompt_token \

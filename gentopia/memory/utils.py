@@ -10,15 +10,13 @@ def get_prompt_input_key(inputs: Dict[str, Any], memory_variables: List[str]) ->
     """
     Get the key for the prompt input.
 
-    Args:
-        inputs (Dict[str, Any]): The input dictionary.
-        memory_variables (List[str]): List of memory variables.
-
-    Returns:
-        str: The key for the prompt input.
-
-    Raises:
-        ValueError: If more than one input key is found.
+    :param inputs: The input dictionary.
+    :type inputs: Dict[str, Any]
+    :param memory_variables: List of memory variables.
+    :type memory_variables: List[str]
+    :return: The key for the prompt input.
+    :rtype: str
+    :raises ValueError: If more than one input key is found.
     """
     prompt_input_keys = list(set(inputs).difference(memory_variables + ["stop"]))
     if len(prompt_input_keys) != 1:
@@ -30,16 +28,15 @@ def get_from_env(key: str, env_key: str, default: Optional[str] = None) -> str:
     """
     Get a value from a dictionary or an environment variable.
 
-    Args:
-        key (str): The key to search in the dictionary.
-        env_key (str): The environment variable key.
-        default (Optional[str], optional): Default value if the key is not found. Defaults to None.
-
-    Returns:
-        str: The value associated with the key.
-
-    Raises:
-        ValueError: If the key is not found and no default value is provided.
+    :param key: The key to search in the dictionary.
+    :type key: str
+    :param env_key: The environment variable key.
+    :type env_key: str
+    :param default: Default value if the key is not found. Defaults to None.
+    :type default: Optional[str], optional
+    :return: The value associated with the key.
+    :rtype: str
+    :raises ValueError: If the key is not found and no default value is provided.
     """
     if env_key in os.environ and os.environ[env_key]:
         return os.environ[env_key]
@@ -59,14 +56,16 @@ def get_from_dict_or_env(
     """
     Get a value from a dictionary or an environment variable.
 
-    Args:
-        data (Dict[str, Any]): The input dictionary.
-        key (str): The key to search in the dictionary.
-        env_key (str): The environment variable key.
-        default (Optional[str], optional): Default value if the key is not found. Defaults to None.
-
-    Returns:
-        str: The value associated with the key.
+    :param data: The input dictionary.
+    :type data: Dict[str, Any]
+    :param key: The key to search in the dictionary.
+    :type key: str
+    :param env_key: The environment variable key.
+    :type env_key: str
+    :param default: Default value if the key is not found. Defaults to None.
+    :type default: Optional[str], optional
+    :return: The value associated with the key.
+    :rtype: str
     """
     if key in data and data[key]:
         return data[key]
@@ -78,15 +77,13 @@ def cosine_similarity(X: Matrix, Y: Matrix) -> np.ndarray:
     """
     Calculate row-wise cosine similarity between two equal-width matrices.
 
-    Args:
-        X (Matrix): The first matrix.
-        Y (Matrix): The second matrix.
-
-    Returns:
-        np.ndarray: The cosine similarity matrix.
-
-    Raises:
-        ValueError: If the number of columns in X and Y are not the same.
+    :param X: The first matrix.
+    :type X: Matrix
+    :param Y: The second matrix.
+    :type Y: Matrix
+    :return: The cosine similarity matrix.
+    :rtype: np.ndarray
+    :raises ValueError: If the number of columns in X and Y are not the same.
     """
     if len(X) == 0 or len(Y) == 0:
         return np.array([])
@@ -114,17 +111,17 @@ def maximal_marginal_relevance(
     """
     Calculate maximal marginal relevance.
 
-    Args:
-        query_embedding (np.ndarray): The query embedding.
-        embedding_list (list): The list of embeddings.
-        lambda_mult (float, optional): The lambda multiplier. Defaults to 0.5.
-        k (int, optional): The number of embeddings to select. Defaults to 4.
-
-    Returns:
-        List[int]: The indices of the selected embeddings.
-
-    Raises:
-        ValueError: If the number of embeddings to select is invalid.
+    :param query_embedding: The query embedding.
+    :type query_embedding: np.ndarray
+    :param embedding_list: The list of embeddings.
+    :type embedding_list: list
+    :param lambda_mult: The lambda multiplier. Defaults to 0.5.
+    :type lambda_mult: float, optional
+    :param k: The number of embeddings to select. Defaults to 4.
+    :type k: int, optional
+    :return: The indices of the selected embeddings.
+    :rtype: List[int]
+    :raises ValueError: If the number of embeddings to select is invalid.
     """
     if min(k, len(embedding_list)) <= 0:
         return []

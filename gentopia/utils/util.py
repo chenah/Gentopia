@@ -5,11 +5,11 @@ def get_default_client_param_model(model_name: str) -> BaseParamModel:
     """
     Get the default client parameter model.
 
-    Args:
-        model_name: The name of the model.
+    :param model_name: The name of the model.
+    :type model_name: str
 
-    Returns:
-        The default client parameter model.
+    :return: The default client parameter model.
+    :rtype: BaseParamModel
     """
     return None
 
@@ -17,12 +17,14 @@ def print_tree(obj, indent=0):
     """
     Print the tree structure of an object.
 
-    Args:
-        obj: The object to print the tree structure of.
-        indent: The indentation level.
+    :param obj: The object to print the tree structure of.
+    :type obj: Any
 
-    Returns:
-        None
+    :param indent: The indentation level.
+    :type indent: int
+
+    :return: None
+    :rtype: None
     """
     for attr in dir(obj):
         if not attr.startswith('_'):
