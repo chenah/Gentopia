@@ -76,7 +76,6 @@ class ReactAgent(BaseAgent):
     ) -> str:
         """Construct the scratchpad that lets the agent continue its thought process."""
         thoughts = ""
-        print(intermediate_steps)
         for action, observation in intermediate_steps:
             thoughts += action.log
             thoughts += f"\nObservation: {observation}\nThought:"
@@ -149,6 +148,7 @@ class ReactAgent(BaseAgent):
         :return: AgentOutput object.
         :rtype: AgentOutput
         """
+        self.intermediate_steps.clear()
         logging.info(f"Running {self.name + ':' + self.version} with instruction: {instruction}")
         total_cost = 0.0
         total_token = 0
@@ -159,8 +159,8 @@ class ReactAgent(BaseAgent):
             logging.info(f"Prompt: {prompt}")
             response = self.llm.completion(prompt, stop=["Observation:"])
             if response.state == "error":
-                print("Planner failed to retrieve response from LLM")
-                raise ValueError("Planner failed to retrieve response from LLM")
+                print("Failed to retrieve response from LLM")
+                raise ValueError("Failed to retrieve response from LLM")
 
             logging.info(f"Response: {response.content}")
             total_cost += calculate_cost(self.llm.model_name, response.prompt_token,
@@ -181,7 +181,7 @@ class ReactAgent(BaseAgent):
             self.intermediate_steps[-1].append(result)
         return AgentOutput(output=response.content, cost=total_cost, token_usage=total_token)
 
-    def stream(self, instruction: Optional[str] = None, output: Optional[BaseOutput] = None):
+    def stream(self, instruction: Optional[str] = None, output: Optional[BaseOutput] = None, max_iterations: int = 10):
         """
         Stream output the agent with the given instruction.
 
@@ -198,7 +198,7 @@ class ReactAgent(BaseAgent):
         if output is None:
             output = BaseOutput()
         output.thinking(self.name)
-        for _ in range(10):
+        for _ in range(max_iterations):
 
             prompt = self._compose_prompt(instruction)
             logging.info(f"Prompt: {prompt}")
@@ -209,8 +209,6 @@ class ReactAgent(BaseAgent):
             for i in response:
                 content += i.content
                 output.panel_print(i.content, self.name, True)
-
-                # print(i.content)
             output.clear()
 
             logging.info(f"Response: {content}")
