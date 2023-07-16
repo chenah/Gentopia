@@ -18,6 +18,30 @@ FINAL_ANSWER_ACTION = "Final Answer:"
 
 
 class ReactAgent(BaseAgent):
+    """
+    Sequential ReactAgent class inherited from BaseAgent. Implementing ReAct agent paradigm https://arxiv.org/pdf/2210.03629.pdf
+
+    :param name: Name of the agent, defaults to "ReactAgent".
+    :type name: str, optional
+    :param type: Type of the agent, defaults to AgentType.react.
+    :type type: AgentType, optional
+    :param version: Version of the agent.
+    :type version: str
+    :param description: Description of the agent.
+    :type description: str
+    :param target_tasks: List of target tasks for the agent.
+    :type target_tasks: list[str]
+    :param llm: Language model that the agent uses.
+    :type llm: OpenAIGPTClient
+    :param prompt_template: Template used to create prompts for the agent, defaults to None.
+    :type prompt_template: PromptTemplate, optional
+    :param plugins: List of plugins used by the agent, defaults to None.
+    :type plugins: List[Union[BaseTool, BaseAgent]], optional
+    :param examples: Fewshot examplars used for the agent, defaults to None.
+    :type examples: Union[str, List[str]], optional
+    :param args_schema: Schema for the arguments of the agent
+    :type args_schema: Optional[Type[BaseModel]], optional
+    """
     name: str = "ReactAgent"
     type: AgentType = AgentType.react
     version: str
@@ -114,12 +138,22 @@ class ReactAgent(BaseAgent):
             tool_names=tool_names
         )
 
-    def run(self, instruction):
+    def run(self, instruction, max_iterations=10):
+        """
+        Run the agent with the given instruction.
+
+        :param instruction: Instruction to run the agent with.
+        :type instruction: str
+        :param max_iterations: Maximum number of iterations of reasoning steps, defaults to 10.
+        :type max_iterations: int, optional
+        :return: AgentOutput object.
+        :rtype: AgentOutput
+        """
         logging.info(f"Running {self.name + ':' + self.version} with instruction: {instruction}")
         total_cost = 0.0
         total_token = 0
 
-        for _ in range(10):
+        for _ in range(max_iterations):
 
             prompt = self._compose_prompt(instruction)
             logging.info(f"Prompt: {prompt}")
@@ -140,11 +174,24 @@ class ReactAgent(BaseAgent):
             logging.info(f"Action: {action}")
             logging.info(f"Tool Input: {tool_input}")
             result = self._format_function_map()[action](tool_input)
+            if isinstance(result, AgentOutput):
+                total_cost += result.cost
+                total_token += result.token_usage
             logging.info(f"Result: {result}")
             self.intermediate_steps[-1].append(result)
         return AgentOutput(output=response.content, cost=total_cost, token_usage=total_token)
 
     def stream(self, instruction: Optional[str] = None, output: Optional[BaseOutput] = None):
+        """
+        Stream output the agent with the given instruction.
+
+        :param instruction: Instruction to run the agent with.
+        :type instruction: str
+        :param output: Output object to stream to.
+        :type output: BaseOutput
+        :return: AgentOutput object.
+        :rtype: AgentOutput
+        """
         self.intermediate_steps.clear()
         total_cost = 0.0
         total_token = 0

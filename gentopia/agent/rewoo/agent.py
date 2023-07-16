@@ -1,7 +1,8 @@
 import logging
 import os
 import re
-from typing import List, Dict, Union, Optional, Tuple
+from typing import List, Dict, Union, Optional, Tuple, Type
+from pydantic import create_model, BaseModel
 
 from gentopia import PromptTemplate
 from concurrent.futures import ThreadPoolExecutor
@@ -17,6 +18,29 @@ from gentopia.utils.text_helpers import *
 
 
 class RewooAgent(BaseAgent):
+    """Distributive RewooAgent class inherited from BaseAgent. Implementing ReWOO paradigm https://arxiv.org/pdf/2305.18323.pdf
+
+    :param name: Name of the agent, defaults to "RewooAgent".
+    :type name: str, optional
+    :param type: Type of the agent, defaults to AgentType.rewoo.
+    :type type: AgentType, optional
+    :param version: Version of the agent.
+    :type version: str
+    :param description: Description of the agent.
+    :type description: str
+    :param target_tasks: List of target tasks for the agent.
+    :type target_tasks: list[str]
+    :param llm: Language model that the agent uses.
+    :type llm: BaseLLM
+    :param prompt_template: Template used to create prompts for the agent, defaults to None.
+    :type prompt_template: PromptTemplate, optional
+    :param plugins: List of plugins used by the agent, defaults to None.
+    :type plugins: List[Union[BaseTool, BaseAgent]], optional
+    :param examples: Fewshot examplars used for the agent, defaults to None.
+    :type examples: Union[str, List[str]], optional
+    :param args_schema: Schema for the arguments of the agent
+    :type args_schema: Optional[Type[BaseModel]], optional
+    """
     name: str = "RewooAgent"
     type: AgentType = AgentType.rewoo
     version: str = ""
@@ -26,6 +50,7 @@ class RewooAgent(BaseAgent):
     prompt_template: Dict[str, PromptTemplate]  # {"Planner": xxx, "Solver": xxx}
     plugins: List[Union[BaseTool, BaseAgent]]
     examples: Dict[str, Union[str, List[str]]] = dict()
+    args_schema: Optional[Type[BaseModel]] = create_model("ReactArgsSchema", instruction=(str, ...))
     # logger = logging.getLogger('application')
 
     def _get_llms(self):
@@ -51,6 +76,11 @@ class RewooAgent(BaseAgent):
             #E1
         should result in: {"#Plan1": [], "#Plan2": ["#E1"]}
         This function should also return a plan map.
+
+        :param planner_response: Planner output.
+        :type planner_response: str
+        :return: A list of plan map.
+        :rtype: List[dict[str, List[str]]]
         """
         valid_chunk = [line for line in planner_response.splitlines()
                        if line.startswith("#Plan") or line.startswith("#E")]
@@ -73,6 +103,11 @@ class RewooAgent(BaseAgent):
         It should also identify the level of each #E in dependency map.
         Example:
             {"#E1": "Tool1", "#E2": "Tool2", "#E3": "Tool3", "#E4": "Tool4"}, [[#E1, #E2], [#E3, #E4]]
+
+        :param planner_response: Planner output.
+        :type planner_response: str
+        :return: A mapping from #E to tool call and a list of levels.
+        :rtype: Tuple[dict[str, str], List[List[str]]]
         """
         evidences, dependence = dict(), dict()
         for line in planner_response.splitlines():
@@ -104,6 +139,20 @@ class RewooAgent(BaseAgent):
 
 
     def _run_plugin(self, e, planner_evidences, worker_evidences, output=BaseOutput()):
+        """
+        Run a plugin for a given evidence. This function should also cumulate the cost and tokens.
+
+        :param e: Evidence.
+        :type e: str
+        :param planner_evidences: A mapping from #E to tool call.
+        :type planner_evidences: dict[str, str]
+        :param worker_evidences: A mapping from #E to tool call.
+        :type worker_evidences: dict[str, str]
+        :param output: Output object, defaults to BaseOutput().
+        :type output: BaseOutput, optional
+        :return: A dict with plugin_cost, plugin_token, and evidence.
+        :rtype: dict
+        """
         result = dict(e=e, plugin_cost=0, plugin_token=0, evidence="")
         tool_call = planner_evidences[e]
         if "[" not in tool_call:
@@ -130,6 +179,18 @@ class RewooAgent(BaseAgent):
 
 
     def _get_worker_evidence(self, planner_evidences, evidences_level, output=BaseOutput()):
+        """
+        Parallel execution of plugins in DAG for speedup. This is one of core benefits of ReWOO agents.
+
+        :param planner_evidences: A mapping from #E to tool call.
+        :type planner_evidences: dict[str, str]
+        :param evidences_level: A list of levels of evidences. Calculated from DAG of plugin calls.
+        :type evidences_level: List[List[str]]
+        :param output: Output object, defaults to BaseOutput().
+        :type output: BaseOutput, optional
+        :return: A mapping from #E to tool call.
+        :rtype: dict[str, str]
+        """
         worker_evidences = dict()
         plugin_cost, plugin_token = 0.0, 0.0
         with ThreadPoolExecutor(max_workers=2) as pool:
@@ -156,6 +217,14 @@ class RewooAgent(BaseAgent):
                 return p
 
     def run(self, instruction: str) -> AgentOutput:
+        """
+        Run the agent with a given instruction.
+
+        :param instruction: Instruction to run.
+        :type instruction: str
+        :return: AgentOutput object.
+        :rtype: AgentOutput
+        """
         logging.info(f"Running {self.name + ':' + self.version} with instruction: {instruction}")
         total_cost = 0.0
         total_token = 0
@@ -196,6 +265,16 @@ class RewooAgent(BaseAgent):
         return AgentOutput(output=solver_output.content, cost=total_cost, token_usage=total_token)
 
     def stream(self, instruction: str, output: Optional[BaseOutput] = None):
+        """
+        Stream output the agent with a given instruction.
+
+        :param instruction: Instruction to run.
+        :type instruction: str
+        :param output: Output object, defaults to None.
+        :type output: Optional[BaseOutput], optional
+        :return: AgentOutput object.
+        :rtype: AgentOutput
+        """
         if output is None:
             output = BaseOutput()
         output.update_status(f"{self.name} is initializing...")

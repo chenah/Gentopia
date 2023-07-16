@@ -114,7 +114,16 @@ class HuggingfaceLoader(BaseModel):
 
 class HuggingfaceLLMClient(BaseLLM, BaseModel):
     """
-    Huggingface LLM client
+    Huggingface LLM client. It loads open source LLMs uploaded to Huggingface model hub.
+
+    :param model_name: model name
+    :type model_name: str
+    :param params: model parameters
+    :type params: HuggingfaceParamModel
+    :param device: device to use, one of ['cpu', 'mps', 'gpu', 'gpu-8bit', 'gpu-4bit']
+    :type device: str
+    :param model: model instance initialized by user. Default is None, which will seek to load from url specified in model_card.
+    :type model: Optional[BaseLLM]
     """
     model_name: str
     params: HuggingfaceParamModel = HuggingfaceParamModel()
@@ -132,22 +141,47 @@ class HuggingfaceLLMClient(BaseLLM, BaseModel):
         return v
 
     def get_model_name(self) -> str:
+        """
+        Get model name.
+
+        :return: model name
+        :rtype: str
+        """
         return self.model_name
 
     def get_model_param(self) -> BaseParamModel:
+        """
+        Get model parameters.
+
+        :return: model parameters
+        :rtype: BaseParamModel
+        """
         return self.params
 
     def get_model_loader_info(self) -> HuggingfaceLoaderModel:
+        """
+        Get model loader information.
+
+        :return: model loader information
+        :rtype: HuggingfaceLoaderModel
+        """
         model_loader = HuggingfaceLoader(model_name=self.model_name, device=self.device)
         return model_loader.get_model_info()
 
     def completion(self, prompt: str, **kwargs) -> BaseCompletion:
         """
-        Generate completion
+        Generate completion.
+
+        :param prompt: prompt text
+        :type prompt: str
+        :param kwargs: additional parameters
+        :type kwargs: Any
+        :return: completion
+        :rtype: BaseCompletion
         """
         # Load model
         if self.model is None:
-            print("Load model!")
+            print("Loading model from Huggingface...")
             model_loader = HuggingfaceLoader(model_name=self.model_name, device=self.device)
             loads = model_loader.load_model()
             if loads is None:
@@ -179,9 +213,20 @@ class HuggingfaceLLMClient(BaseLLM, BaseModel):
 
     def chat_completion(self, message) -> ChatCompletion:
         # TODO: Implement chat_completion
+        # Maybe this is not needed.
         raise NotImplementedError("chat_completion is not supported for Huggingface LLM")
 
     def stream_chat_completion(self, prompt, **kwargs) -> Generator:
+        """
+        Stream output of Huggingface LLM for chat completion.
+
+        :param prompt: prompt text
+        :type prompt: str
+        :param kwargs: additional parameters
+        :type kwargs: Any
+        :return: generator of completion
+        :rtype: Generator
+        """
         # Load model
         if self.model is None:
             model_loader = HuggingfaceLoader(model_name=self.model_name, device=self.device)

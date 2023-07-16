@@ -12,6 +12,14 @@ import json
 
 
 class OpenAIGPTClient(BaseLLM, BaseModel):
+    """
+    Wrapper class for OpenAI GPT API collections.
+
+    :param model_name: The name of the model to use.
+    :type model_name: str
+    :param params: The parameters for the model.
+    :type params: OpenAIParamModel
+    """
     model_name: str
     params: OpenAIParamModel = OpenAIParamModel()
 
@@ -26,6 +34,17 @@ class OpenAIGPTClient(BaseLLM, BaseModel):
         return self.params
 
     def completion(self, prompt: str, **kwargs) -> BaseCompletion:
+        """
+        Completion method for OpenAI GPT API.
+
+        :param prompt: The prompt to use for completion.
+        :type prompt: str
+        :param kwargs: Additional keyword arguments.
+        :type kwargs: dict
+        :return: BaseCompletion object.
+        :rtype: BaseCompletion
+
+        """
         try:
             response = openai.ChatCompletion.create(
                 n=self.params.n,
@@ -47,6 +66,14 @@ class OpenAIGPTClient(BaseLLM, BaseModel):
             return BaseCompletion(state="error", content=exception)
 
     def chat_completion(self, message: List[dict]) -> ChatCompletion:
+        """
+        Chat completion method for OpenAI GPT API.
+
+        :param message: The message to use for completion.
+        :type message: List[dict]
+        :return: ChatCompletion object.
+        :rtype: ChatCompletion
+        """
         try:
             response = openai.ChatCompletion.create(
                 n=self.params.n,
@@ -68,6 +95,16 @@ class OpenAIGPTClient(BaseLLM, BaseModel):
             return ChatCompletion(state="error", content=exception)
 
     def stream_chat_completion(self, message: List[dict],  **kwargs):
+        """
+        Stream output chat completion for OpenAI GPT API.
+
+        :param message: The message (scratchpad) to use for completion. Usually contains json of role and content.
+        :type message: List[dict]
+        :param kwargs: Additional keyword arguments.
+        :type kwargs: dict
+        :return: ChatCompletion object.
+        :rtype: ChatCompletion
+        """
         try:
             response = openai.ChatCompletion.create(
                 n=self.params.n,
@@ -98,6 +135,18 @@ class OpenAIGPTClient(BaseLLM, BaseModel):
     def function_chat_completion(self, message: List[dict],
                                  function_map: Dict[str, Callable],
                                  function_schema: List[Dict]) -> ChatCompletionWithHistory:
+        """
+        Chat completion method for OpenAI GPT API.
+
+        :param message: The message to use for completion.
+        :type message: List[dict]
+        :param function_map: The function map to use for completion.
+        :type function_map: Dict[str, Callable]
+        :param function_schema: The function schema to use for completion.
+        :type function_schema: List[Dict]
+        :return: ChatCompletionWithHistory object.
+        :rtype: ChatCompletionWithHistory
+        """
         assert len(function_schema) == len(function_map)
         try:
             response = openai.ChatCompletion.create(

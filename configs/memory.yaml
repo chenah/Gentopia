@@ -3,7 +3,7 @@ name: main
 type: openai_memory
 version: 0.0.1
 description: main agent leveraging OpenAI function call API.
-prompt_template: !prompt ZeroShotVanillaPrompt
+prompt_template: !prompt VanillaPrompt
 memory:
   memory_type: chroma   # chroma or pinecone
   conversation_threshold: 1        # first-level memory
