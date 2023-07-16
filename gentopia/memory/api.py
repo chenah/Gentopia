@@ -17,10 +17,10 @@ SummaryPrompt = PromptTemplate(
     input_variables=["rank", "input", "output"],
     template=
 """
-You are a helpful assistant who is expected to summarize some sentences.
-Another AI assistant is interacting with the user and multiple tools. 
-Here is part of their conversation. You need to summarize it and provide a brief summary, which will help other assistants to recall their thoughts and actions.
-Note that you need to use phrases like "In the fourth step" according to the rank to start your summary. For example, use "In the fifth step" if it is step 5, or use "First" if it is step 1, or "Second" in step 2.
+You are a helpful AI assistant to summarize some sentences.
+Another assistant has interacted with the user for multiple rounds.
+Here is part of their conversation for a certain step. You need to provide a brief summary that helps the other assistant recall previous thoughts and actions.
+Note that you need to start with "In the xxx step" depending on the step number. For example, "In the second step" if the step number is 2.
 
 In step {rank}, the part of the conversation is:
 Input: {input}
@@ -168,7 +168,7 @@ class MemoryWrapper:
         related_history = self.load_history(instruction)
 
         if related_history != "":
-            output.panel_print(related_history, f"[green] Auto Conversation Memory: ")
+            output.panel_print(related_history, f"[green] Related Conversation Memory: ")
             context_history.append({"role": "user", "content": RelatedContextPrompt.format(related_history=related_history)})
 
         context_history.append({"role": "user", "content": instruction})

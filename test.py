@@ -16,7 +16,7 @@ if __name__ == '__main__':
     enable_log(log_level='debug')
     dotenv.load_dotenv(".env")
 
-    assembler = AgentAssembler(file='configs/alice.yaml')
+    assembler = AgentAssembler(file='configs/memory.yaml')
 
     # # assembler.manager = LocalLLMManager()
     agent = assembler.get_agent()

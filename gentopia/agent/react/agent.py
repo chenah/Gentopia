@@ -76,7 +76,6 @@ class ReactAgent(BaseAgent):
     ) -> str:
         """Construct the scratchpad that lets the agent continue its thought process."""
         thoughts = ""
-        print(intermediate_steps)
         for action, observation in intermediate_steps:
             thoughts += action.log
             thoughts += f"\nObservation: {observation}\nThought:"
