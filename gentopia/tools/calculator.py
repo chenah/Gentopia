@@ -1,11 +1,30 @@
 from typing import AnyStr
-
-from langchain import OpenAI, LLMMathChain
-
+import re
+import numexpr
 from .basetool import *
+import math
 
 class CalculatorArgs(BaseModel):
     expression: str = Field(..., description="A mathematical expression.")
+
+def _evaluate_expression(expression: str) -> str:
+    try:
+        local_dict = {"pi": math.pi, "e": math.e}
+        output = str(
+            numexpr.evaluate(
+                expression.strip(),
+                global_dict={},  # restrict access to globals
+                local_dict=local_dict,  # add common mathematical functions
+            )
+        )
+    except Exception as e:
+        raise ValueError(
+            f'LLMMathChain._evaluate("{expression}") raised error: {e}.'
+            " Please try again with a valid numerical expression"
+        )
+
+    # Remove any leading and trailing brackets from the output
+    return re.sub(r"^\[|\]$", "", output)
 
 class Calculator(BaseTool):
     """docstring for Calculator"""
@@ -15,10 +34,9 @@ class Calculator(BaseTool):
     args_schema: Optional[Type[BaseModel]] = CalculatorArgs
 
     def _run(self, expression: AnyStr) -> Any:
-        llm = OpenAI(temperature=0)
-        tool = LLMMathChain(llm=llm, verbose=self.verbose)
-        response = tool(expression)
-        evidence = response["answer"].replace("Answer:", "").strip()
+
+        response = _evaluate_expression(expression)
+        evidence = response.strip()
         return evidence
 
     async def _arun(self, *args: Any, **kwargs: Any) -> Any:

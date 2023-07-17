@@ -14,7 +14,6 @@ setup(
     install_requires=[
         'fastapi',
         'geopy',
-        'langchain',
         'optimum',
         'peft',
         'pydantic',

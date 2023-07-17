@@ -1,6 +1,5 @@
 fastapi~=0.95.1
 geopy==2.3.0
-langchain~=0.0.166
 optimum~=1.8.7
 peft~=0.3.0
 pydantic~=1.10.7
@@ -26,3 +25,4 @@ wolframalpha~=5.0.0
 numpy~=1.24.2
 chromadb~=0.3.26
 tenacity~=8.2.2
+numexpr~=2.8.4

@@ -1,9 +1,7 @@
 from typing import AnyStr
-
-from langchain.document_loaders import TextLoader
-from langchain.indexes import VectorstoreIndexCreator
-
 from .basetool import *
+from .utils.document_loaders.text_loader import TextLoader
+from .utils.vector_store import VectorstoreIndexCreator
 
 
 class SearchDoc(BaseTool):
@@ -16,7 +14,7 @@ class SearchDoc(BaseTool):
 
     def _run(self, query: AnyStr) -> AnyStr:
         loader = TextLoader(self.doc_path)
-        vector_store = VectorstoreIndexCreator().from_loaders([loader]).vectorstore
+        vector_store = VectorstoreIndexCreator().from_loaders([loader])
         evidence = vector_store.similarity_search(query, k=1)[0].page_content
         return evidence
 

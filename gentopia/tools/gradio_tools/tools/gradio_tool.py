@@ -9,14 +9,6 @@ import huggingface_hub
 from gradio_client.client import Job
 from gradio_client.utils import QueueError
 
-try:
-    import langchain as lc
-
-    LANGCHAIN_INSTALLED = True
-except (ModuleNotFoundError, ImportError):
-    LANGCHAIN_INSTALLED = False
-
-
 class GradioTool:
     def __init__(
         self,
@@ -109,18 +101,6 @@ class GradioTool:
         if not self._block:
             self._block = gr.load(name=self.src, src="spaces")
         return self._block
-
-    # Optional langchain functionalities
-    @property
-    def langchain(self) -> "langchain.agents.Tool":  # type: ignore
-        if not LANGCHAIN_INSTALLED:
-            raise ModuleNotFoundError(
-                "langchain must be installed to access langchain tool"
-            )
-
-        return lc.agents.Tool(  # type: ignore
-            name=self.name, func=self.run, description=self.description
-        )
 
     def __repr__(self) -> str:
         return f"GradioTool(name={self.name}, src={self.src})"

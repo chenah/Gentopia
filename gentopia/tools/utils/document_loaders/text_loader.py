@@ -2,8 +2,10 @@ from abc import abstractmethod, ABC
 from typing import Optional, List, Iterator, Sequence, Any, Callable
 
 from gentopia.tools.utils import Document
+from gentopia.tools.utils.document_loaders.base_loader import BaseLoader
 
-class TextLoader:
+
+class TextLoader(BaseLoader):
     """Load text files."""
 
     def __init__(self, file_path: str, encoding: Optional[str] = None):
