@@ -9,9 +9,9 @@ from .basetool import *
 class WebPage(BaseTool):
     """Tool that adds the capability to query the Google search API."""
 
-    name = "WebPage"
-    description = "Worker that can get web pages through url. Useful when you have a  url and need to find detailed information." \
-                  "You must make sure that the url is real and correct, come from plugin or user input." \
+    name = "web_page"
+    description = "A tool to retrieve web pages through url. Useful when you have a url and need to find detailed information inside." \
+                  "You must make sure that the url is real and correct." \
                   "Input should be a url."
 
     args_schema: Optional[Type[BaseModel]] = create_model("WebPageArgs", url=(str, ...))

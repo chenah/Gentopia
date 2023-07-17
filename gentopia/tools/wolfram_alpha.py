@@ -27,8 +27,8 @@ class CustomWolframAlphaAPITool:
 
 class WolframAlpha(BaseTool):
     name = "wolfram_alpha"
-    description = "A WolframAlpha search engine. Useful when you need to solve a complicated Mathematical or " \
-                  "Algebraic equation. Input should be an equation or function."
+    description = "A WolframAlpha search engine. Useful when you need to search for scientific knowledge or solve a Mathematical and " \
+                  "Algebraic equation. Input should be a query or equation."
     args_schema: Optional[Type[BaseModel]] = create_model("WolframAlphaArgs", query=(str, ...))
 
     def _run(self, query: AnyStr) -> AnyStr:

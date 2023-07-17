@@ -6,22 +6,19 @@ from gentopia.tools.basetool import *
 class ArxivSearch(BaseTool):
     """Tool that adds the capability to query Axiv search api"""
 
-    name = "ArxivSearch"
+    name = "arxiv_search"
     description = (
-        "Search information from Arxiv.org "
-        "Useful for when you need to answer questions about Physics, Mathematics, "
-        "Computer Science, Quantitative Biology, Quantitative Finance, Statistics, "
-        "Electrical Engineering, and Economics "
-        "from scientific articles on arxiv.org. "
+        "Search engine from Arxiv.org "
+        "It returns several relevant paper Titles, Authors and short Summary."
         "Input should be a search query."
     )
     args_schema: Optional[Type[BaseModel]] = create_model("ArxivSearchArgs", query=(str, ...))
 
     def _run(self, query: AnyStr) -> AnyStr:
         # arxiv_exceptions: Any  # :meta private:
-        top_k_results: int = 3
+        top_k_results: int = 5
         ARXIV_MAX_QUERY_LENGTH = 300
-        doc_content_chars_max: int = 4000
+        doc_content_chars_max: int = 2000
         try:
             results = arxiv.Search(
                 query[: ARXIV_MAX_QUERY_LENGTH], max_results=top_k_results
@@ -38,7 +35,7 @@ class ArxivSearch(BaseTool):
         if docs:
             return "\n\n".join(docs)[: doc_content_chars_max]
         else:
-            return "No good Arxiv Result was found"
+            return "No Arxiv Result was found"
 
     async def _arun(self, *args: Any, **kwargs: Any) -> Any:
         raise NotImplementedError

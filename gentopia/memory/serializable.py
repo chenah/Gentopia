@@ -59,10 +59,25 @@ class Serializable(BaseModel, ABC):
     _gt_kwargs = PrivateAttr(default_factory=dict)
 
     def __init__(self, **kwargs: Any) -> None:
+        """
+        Initialize the Serializable object.
+
+        :param kwargs: Keyword arguments to initialize the object.
+        """
         super().__init__(**kwargs)
         self._gt_kwargs = kwargs
 
     def to_json(self) -> Union[SerializedConstructor, SerializedNotImplemented]:
+        """
+        Convert the object to JSON representation.
+
+        :returns: The JSON representation.
+        :rtype: Union[SerializedConstructor, SerializedNotImplemented]
+
+        Notes:
+        - If the object is not serializable, returns SerializedNotImplemented.
+        - If the object is serializable, returns SerializedConstructor.
+        """
         if not self.gt_serializable:
             return self.to_json_not_implemented()
 
@@ -104,12 +119,28 @@ class Serializable(BaseModel, ABC):
         }
 
     def to_json_not_implemented(self) -> SerializedNotImplemented:
+        """
+        Convert the object to a not implemented JSON representation.
+
+        :returns: The not implemented JSON representation.
+        :rtype: SerializedNotImplemented
+        """
         return to_json_not_implemented(self)
 
 
 def _replace_secrets(
     root: Dict[Any, Any], secrets_map: Dict[str, str]
 ) -> Dict[Any, Any]:
+    """
+    Replace secrets in the JSON representation.
+
+    :param root: The root dictionary.
+    :type root: Dict[Any, Any]
+    :param secrets_map: The map of secrets.
+    :type secrets_map: Dict[str, str]
+    :returns: The dictionary with replaced secrets.
+    :rtype: Dict[Any, Any]
+    """
     result = root.copy()
     for path, secret_id in secrets_map.items():
         [*parts, last] = path.split(".")
@@ -129,6 +160,14 @@ def _replace_secrets(
 
 
 def to_json_not_implemented(obj: object) -> SerializedNotImplemented:
+    """
+    Convert an object to a not implemented JSON representation.
+
+    :param obj: The object to convert.
+    :type obj: object
+    :returns: The not implemented JSON representation.
+    :rtype: SerializedNotImplemented
+    """
     _id: List[str] = []
     try:
         if hasattr(obj, "__name__"):

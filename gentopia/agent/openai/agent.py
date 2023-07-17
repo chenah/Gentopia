@@ -38,7 +38,7 @@ class OpenAIFunctionChatAgent(BaseAgent):
     :param message_scratchpad: Scratchpad for storing message history, defaults to [{"role": "system", "content": "You are a helpful AI assistant."}].
     :type message_scratchpad: List[Dict], optional
     """
-    name: str = "OpenAIAgent"
+    name: str = "OpenAIFunctionCallAgent"
     type: AgentType = AgentType.openai
     version: str = "NA"
     description: str = "OpenAI Function Call Agent"
@@ -49,8 +49,13 @@ class OpenAIFunctionChatAgent(BaseAgent):
     examples: Union[str, List[str]] = None
     message_scratchpad: List[Dict] = [{"role": "system", "content": "You are a helpful AI assistant."}]
 
+    def __init__(self, **data):
+        super().__init__(**data)
+        self.initialize_system_message(f"Your name is {self.name}. You are described as: {self.description}")
+
+
     def initialize_system_message(self, msg):
-        """Initialize the system message to openai api.
+        """Initialize the system message to openai function call agent.
 
         :param msg: System message to be initialized.
         :type msg: str

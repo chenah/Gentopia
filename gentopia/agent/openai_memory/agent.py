@@ -129,7 +129,7 @@ class OpenAIMemoryChatAgent(OpenAIFunctionChatAgent):
         if output is None:
             output = BaseOutput()
         self.memory.clear_memory_II()
-        message_scratchpad = self.__add_system_prompt(self.memory.lastest_context(instruction))
+        message_scratchpad = self.__add_system_prompt(self.memory.lastest_context(instruction, output))
         total_cost = 0
         total_token = 0
 
@@ -145,10 +145,10 @@ class OpenAIMemoryChatAgent(OpenAIFunctionChatAgent):
         if response.state == "success":
             output.done(self.name)
             output.panel_print(response.content)
-            self.memory.save_memory_I({"role": "user", "content": instruction}, response.message_scratchpad[-1], self.llm)
+            self.memory.save_memory_I({"role": "user", "content": instruction}, response.message_scratchpad[-1], output)
 
             if len(response.message_scratchpad) != len(message_scratchpad) + 1: # normal case
-                self.memory.save_memory_II(response.message_scratchpad[-3], response.message_scratchpad[-2],  self.llm)       
+                self.memory.save_memory_II(response.message_scratchpad[-3], response.message_scratchpad[-2], output, self.llm)       
 
             total_cost += calculate_cost(self.llm.model_name, response.prompt_token,
                                          response.completion_token) + response.plugin_cost
@@ -174,7 +174,7 @@ class OpenAIMemoryChatAgent(OpenAIFunctionChatAgent):
         output.thinking(self.name)
         if is_start:
             self.memory.clear_memory_II()
-        message_scratchpad = self.__add_system_prompt(self.memory.lastest_context(instruction))
+        message_scratchpad = self.__add_system_prompt(self.memory.lastest_context(instruction, output))
         output.debug(message_scratchpad)
         assert len(message_scratchpad) > 1
 
@@ -221,10 +221,10 @@ class OpenAIMemoryChatAgent(OpenAIFunctionChatAgent):
             self.memory.save_memory_II(dict(role='assistant', content=None, function_call={i: str(j) for i, j in result.items()}),
                                             {"role": "function",
                                             "name": function_name,
-                                            "content": function_response}, self.llm)
+                                            "content": function_response}, output, self.llm)
             self.stream(instruction, output=output, is_start=False)
         else:
-            self.memory.save_memory_I({"role": "user", "content": instruction}, {"role": _role, "content": result}, self.llm)
+            self.memory.save_memory_I({"role": "user", "content": instruction}, {"role": _role, "content": result}, output)
         # else:
         #     self.message_scratchpad.append({"role": "user", "content": "Summarize what you have done and continue if you have not finished."})
         #     self.stream(output=output)
