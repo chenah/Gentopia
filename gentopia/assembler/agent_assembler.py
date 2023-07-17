@@ -193,7 +193,7 @@ class AgentAssembler:
         """
             This method parses the plugin configuration and returns a list of plugin instances.
 
-            :param obj: A list of plugin configuration dictionaries.
+            :param obj: A list of plugin configuration dictionaries or custom class
             :type obj: list
             :raises AssertionError: If the configuration is not a list.
             :return: A list of plugin instances.
@@ -204,11 +204,11 @@ class AgentAssembler:
         for plugin in obj:
             # If referring to a tool class then directly load it
             if issubclass(plugin.__class__, ToolMetaclass):
-                result.append(plugin)
+                result.append(plugin())
                 continue
 
             # Directly invoke already loaded plugin
-            if plugin['name'] in self.plugins:
+            if plugin.get('name', "") in self.plugins:
                 _plugin = self.plugins[plugin['name']]
                 result.append(_plugin)
                 continue
