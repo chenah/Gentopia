@@ -31,13 +31,13 @@ class CodeInterpreter:
 
 class PythonCodeInterpreter(BaseTool):
     """Python Code Interpreter Tool"""
-    name = "execute_python_code"
-    description = "For executing python codes"
-    args_schema: Optional[Type[BaseModel]] = create_model("CodeInterpreter", codes=(str, ...))
+    name = "run_python_code"
+    description = "A tool to execute Python code and retrieve the command line output. Input should be executable Python code."
+    args_schema: Optional[Type[BaseModel]] = create_model("CodeInterpreter", code=(str, ...))
     interpreter = CodeInterpreter()
 
-    def _run(self, codes: AnyStr) -> Any:
-        return self.interpreter.execute_code(codes)
+    def _run(self, code: AnyStr) -> Any:
+        return self.interpreter.execute_code(code)
 
     async def _arun(self, *args: Any, **kwargs: Any) -> Any:
         raise NotImplementedError
@@ -45,5 +45,5 @@ class PythonCodeInterpreter(BaseTool):
 
 if __name__ == "__main__":
     tool = PythonCodeInterpreter()
-    ans = tool._run("import os\nos.makedirs(\"trash\")")
+    ans = tool._run("import os\nprint(\"helloworld\")")
     print(ans)

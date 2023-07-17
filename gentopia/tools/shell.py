@@ -10,8 +10,6 @@ import pexpect
 from .basetool import *
 
 
-# Revised from the Contributor: [Sihan Zhao](https://github.com/Sarah816)
-
 
 def _lazy_import_pexpect() -> pexpect:
     """Import pexpect only when needed."""
@@ -136,13 +134,15 @@ def get_default_bash_process() -> BashProcess:
 
 
 class RunShell(BaseTool):
-    name = "BashShell"
-    description = "Run shell commands on this {get_platform()} machine"
+    name = "bash_shell"
+    description = (f"A tool to run shell commands on this {get_platform()} machine. "
+                   "It returns output as a real command line interface. "
+                   "Input should be an executable shell command")
     args_schema: Optional[Type[BaseModel]] = create_model("RunShellArgs", commands=(str, ...))
     process: BashProcess = get_default_bash_process()
 
     def _run(self, commands: AnyStr) -> Any:
-        '''Run commands and return final output. 
+        '''Run commands and return final output.
         '''
         return self.process.run(commands)
 

@@ -7,9 +7,13 @@ from rich.box import Box
 from gentopia.tools.arxiv_search import ArxivSearch
 from gentopia.tools.google_search import GoogleSearch
 from gentopia.tools.web_page import WebPage
+from gentopia.tools.shell import RunShell
 from gentopia.assembler.agent_assembler import AgentAssembler
+from gentopia.tools.code_interpreter import *
 from gentopia.output import enable_log
 from gentopia import chat
+
+from gentopia.tools.calculator import Calculator
 
 
 
@@ -18,9 +22,9 @@ if __name__ == '__main__':
     enable_log(log_level='debug')
     dotenv.load_dotenv(".env")
 
-    tool = WebPage()
+    tool = Calculator()
     print(tool.description)
-    print(tool.run("https://sh-tsang.medium.com/review-attention-is-all-you-need-transformer-96c787ecdec1"))
+    print(tool.run("32^32"))
 
     # assembler = AgentAssembler(file='configs/react.yaml')
     #
