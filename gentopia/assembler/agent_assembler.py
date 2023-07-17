@@ -1,12 +1,14 @@
 import os
 from typing import Union, Dict, Optional
 
-import torch.cuda
-
 from gentopia.prompt import PromptTemplate
 from gentopia.agent.base_agent import BaseAgent
 from gentopia.assembler.config import Config
-from gentopia.llm import HuggingfaceLLMClient, OpenAIGPTClient
+from gentopia.llm import OpenAIGPTClient
+from gentopia.utils.util import check_huggingface
+
+if check_huggingface():
+    from gentopia.llm import HuggingfaceLLMClient
 from gentopia.llm.base_llm import BaseLLM
 from gentopia.llm.llm_info import TYPES
 from gentopia.manager.base_llm_manager import BaseLLMManager
@@ -142,6 +144,10 @@ class AgentAssembler:
             params = OpenAIParamModel(**model_param)
             llm = OpenAIGPTClient(model_name=name, params=params)
         elif TYPES.get(name, None) == "Huggingface":
+            try:
+                import torch
+            except ImportError:
+                raise ImportError("Huggingface LLM requires PyTorch to be installed.")
             device = obj.get('device', 'gpu' if torch.cuda.is_available() else 'cpu')
             params = HuggingfaceParamModel(**model_param)
             llm = HuggingfaceLLMClient(model_name=name, params=params, device=device)

@@ -43,6 +43,15 @@ from gentopia.prompt import fewshots
 #     else:
 #         raise ValueError("Model not found")
 
+def check_huggingface():
+    try:
+        import torch
+        import transformers
+        import optimum
+        import peft
+        return True
+    except ImportError:
+        return False
 
 #TODO: get default client param model
 def get_default_client_param_model(model_name:str) -> BaseParamModel:

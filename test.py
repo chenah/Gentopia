@@ -21,6 +21,6 @@ if __name__ == '__main__':
     # # assembler.manager = LocalLLMManager()
     agent = assembler.get_agent()
 
-    # chat(agent)
-    print(agent.run("1+sqrt(33)=?"))
-    print(agent.run("1+sqrt(35)=?"))
+    chat(agent)
+    # print(agent.run("1+sqrt(33)=?"))
+    # print(agent.run("1+sqrt(35)=?"))

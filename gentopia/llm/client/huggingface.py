@@ -1,7 +1,10 @@
+from gentopia.utils.util import check_huggingface
+
+if not check_huggingface():
+    raise ImportError("Huggingface LLM requires PyTorch and Transformers to be installed.")
 import json
 import os
 from typing import Generator, Optional
-from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer
 from threading import Thread
 from pydantic import validator
 

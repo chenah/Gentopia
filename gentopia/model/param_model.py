@@ -1,6 +1,8 @@
 from typing import Union, Dict
-
-import torch
+try:
+    import torch
+except ImportError:
+    pass
 from pydantic import BaseModel
 
 
