@@ -203,8 +203,8 @@ class AgentAssembler:
         result = []
         for plugin in obj:
             # If referring to a tool class then directly load it
-            if issubclass(plugin.__class__, ToolMetaclass):
-                result.append(plugin())
+            if issubclass(plugin.get('name', "").__class__, ToolMetaclass):
+                result.append(plugin.get('name', "")())
                 continue
 
             # Directly invoke already loaded plugin
