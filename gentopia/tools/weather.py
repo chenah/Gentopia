@@ -14,9 +14,10 @@ class Weather(BaseTool):
 class GetTodayWeather(Weather):
     """Tool that looks up today's weather information"""
 
-    name = "GetTodayWeather"
+    name = "get_today_weather"
     description = (
-        "Look up the current weather information for a given location"
+        "A tool to look up the current weather information for a given location."
+        "Input should be a location."
     )
     args_schema: Optional[Type[BaseModel]] = create_model("GetTodayWeatherArgs", location=(str, ...))
 
@@ -53,9 +54,10 @@ class GetTodayWeather(Weather):
 class GetFutureWeather(Weather):
     """Tool that looks up the weather information in the future"""
 
-    name = "GetFutureWeather"
+    name = "get_future_weather"
     description = (
-        "Look up the weather information in the upcoming days for a given location"
+        "A tool to look up the weather information in the upcoming days for a given location"
+        "Input should be a location."
     )
     args_schema: Optional[Type[BaseModel]] = create_model("GetFutureWeatherArgs", location=(str, ...), days=(int, ...))
 

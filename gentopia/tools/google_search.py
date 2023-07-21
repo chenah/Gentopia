@@ -9,7 +9,8 @@ class GoogleSearch(BaseTool):
     """Tool that adds the capability to query the Google search API."""
 
     name = "google_search"
-    description = "A search engine retrieving top search snippets from Google. Input should be a search query."
+    description = ("A search engine retrieving top search results as snippets from Google."
+                   "Input should be a search query.")
     # \Useful when you need to find short " \
     #               "and succinct answers about a specific topic. Input should be a search query."
 

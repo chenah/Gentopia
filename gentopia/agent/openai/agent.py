@@ -35,7 +35,7 @@ class OpenAIFunctionChatAgent(BaseAgent):
     :type plugins: List[Union[BaseTool, BaseAgent]], optional
     :param examples: Fewshot examplars used for the agent, defaults to None.
     :type examples: Union[str, List[str]], optional
-    :param message_scratchpad: Scratchpad for storing message history, defaults to [{"role": "system", "content": "You are a helpful AI assistant."}].
+    :param message_scratchpad: Scratchpad for storing message history.
     :type message_scratchpad: List[Dict], optional
     """
     name: str = "OpenAIFunctionCallAgent"

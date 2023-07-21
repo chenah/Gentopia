@@ -163,7 +163,7 @@ class RewooAgent(BaseAgent):
             # find variables in input and replace with previous evidences
             for var in re.findall(r"#E\d+", tool_input):
                 if var in worker_evidences:
-                    tool_input = tool_input.replace(var, "[" + worker_evidences.get(var, "") + "]")
+                    tool_input = tool_input.replace(var, worker_evidences.get(var, ""))
             try:
                 tool_response = self._find_plugin(tool).run(tool_input)
                 # cumulate agent-as-plugin costs and tokens.
@@ -193,7 +193,7 @@ class RewooAgent(BaseAgent):
         """
         worker_evidences = dict()
         plugin_cost, plugin_token = 0.0, 0.0
-        with ThreadPoolExecutor(max_workers=2) as pool:
+        with ThreadPoolExecutor() as pool:
             for level in evidences_level:
                 results = []
                 for e in level:

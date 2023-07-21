@@ -45,8 +45,8 @@ class ImageCaption(BaseTool):
 
 
 class TextToImage(BaseTool):
-    name = "Text2Image"
-    description = "generate images based on text input"
+    name = "text_to_image"
+    description = "A tool to generate images based on text input, output is a local path where the generated image is stored."
     args_schema: Optional[Type[BaseModel]] = create_model("TextToImageArgs", text=(str, ...))
 
     def _run(self, text: AnyStr) -> Any:

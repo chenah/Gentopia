@@ -13,12 +13,14 @@ class ArxivSearch(BaseTool):
         "Input should be a search query."
     )
     args_schema: Optional[Type[BaseModel]] = create_model("ArxivSearchArgs", query=(str, ...))
+    top_k: int = 5
+    maxlen_per_page = 2000
 
     def _run(self, query: AnyStr) -> AnyStr:
         # arxiv_exceptions: Any  # :meta private:
-        top_k_results: int = 5
+        top_k_results = self.top_k
+        doc_content_chars_max = self.maxlen_per_page
         ARXIV_MAX_QUERY_LENGTH = 300
-        doc_content_chars_max: int = 2000
         try:
             results = arxiv.Search(
                 query[: ARXIV_MAX_QUERY_LENGTH], max_results=top_k_results
