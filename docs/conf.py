@@ -7,6 +7,9 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 import os
 import sys
+import recommonmark
+from recommonmark.parser import CommonMarkParser
+
 sys.path.insert(0, os.path.abspath(''))
 
 project = 'Gentopia'
@@ -18,6 +21,8 @@ release = 'V1.0.0'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
+    'myst_parser',
+    'nbsphinx',
     'sphinx.ext.duration',
     'sphinx.ext.doctest',
     'sphinx.ext.autodoc',
@@ -26,8 +31,14 @@ extensions = [
     'sphinx.ext.napoleon'
 ]
 
+
 templates_path = ['_templates']
 exclude_patterns = []
+
+source_suffix = {
+    '.rst': 'restructuredtext',
+    '.md': 'markdown',
+}
 
 
 
