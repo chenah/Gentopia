@@ -123,6 +123,7 @@ class OpenAIFunctionChatAgent(BaseAgent):
         :param output: Output manager object to be used, defaults to None.
         :type output: Optional[BaseOutput], optional
         """
+        self.clear()
         if output is None:
             output = BaseOutput()
         self.message_scratchpad.append({"role": "user", "content": instruction})
@@ -209,3 +210,6 @@ class OpenAIFunctionChatAgent(BaseAgent):
         # else:
         #     self.message_scratchpad.append({"role": "user", "content": "Summarize what you have done and continue if you have not finished."})
         #     self.stream(output=output)
+
+    def clear(self):
+        self.message_scratchpad = self.message_scratchpad[:1]
