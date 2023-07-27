@@ -4,7 +4,7 @@ from gentopia.assembler.agent_assembler import AgentAssembler
 
 
 class PluginManager:
-    """Manager for agent plugins (tools or components), providing functions to run them.
+    """Manager for agent plugins (tools or agents), providing functions to run them.
 
     :param config: Configuration for the plugin manager which can be a str, Path or list.
     :type config: Union[str, Path, List]

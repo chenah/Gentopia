@@ -180,7 +180,7 @@ class RewooAgent(BaseAgent):
 
     def _get_worker_evidence(self, planner_evidences, evidences_level, output=BaseOutput()):
         """
-        Parallel execution of plugins in DAG for speedup. This is one of core benefits of ReWOO components.
+        Parallel execution of plugins in DAG for speedup. This is one of core benefits of ReWOO agents.
 
         :param planner_evidences: A mapping from #E to tool call.
         :type planner_evidences: dict[str, str]
