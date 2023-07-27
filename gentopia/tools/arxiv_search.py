@@ -3,6 +3,10 @@ import arxiv
 from gentopia.tools.basetool import *
 
 
+class ArxivSearchArgs(BaseModel):
+    query: str = Field(..., description="a search query.")
+
+
 class ArxivSearch(BaseTool):
     """Tool that adds the capability to query Axiv search api"""
 
@@ -12,7 +16,7 @@ class ArxivSearch(BaseTool):
         "It returns several relevant paper Titles, Authors and short Summary."
         "Input should be a search query."
     )
-    args_schema: Optional[Type[BaseModel]] = create_model("ArxivSearchArgs", query=(str, ...))
+    args_schema: Optional[Type[BaseModel]] = ArxivSearchArgs
     top_k: int = 5
     maxlen_per_page = 2000
 

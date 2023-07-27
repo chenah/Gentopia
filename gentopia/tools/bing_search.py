@@ -176,5 +176,5 @@ class BingSearchLoadPage(BingSearch):
 if __name__ == "__main__":
     ans1 = BingSearchTop3()._run("What is the weather today?")
     print(ans1)
-    ans2 = BingSearchLoadPage()._run(1, top3)
+    ans2 = BingSearchLoadPage()._run(1)
     print(ans2)

@@ -1,8 +1,7 @@
 from typing import AnyStr
-
 from gentopia.tools.utils.docstore import DocstoreExplorer, Docstore, Document
+from gentopia.tools.basetool import *
 
-from .basetool import *
 
 class Wiki(Docstore):
     """Wrapper around wikipedia API."""
@@ -37,14 +36,19 @@ class Wiki(Docstore):
             result = f"Could not find [{search}]. Similar: {wikipedia.search(search)}"
         return result
 
+
+class WikipediaArgs(BaseModel):
+    query: str = Field(..., description="a search query as input to wkipedia")
+
+
 class Wikipedia(BaseTool):
     """Tool that adds the capability to query the Wikipedia API."""
 
     name = "wikipedia"
     description = "Search engine from Wikipedia, retrieving relevant wiki page. Useful when you need to " \
                   "get holistic knowledge about people, places, companies, historical events, " \
-                  "or other subjects. Input should be a search query."
-    args_schema: Optional[Type[BaseModel]] = create_model("WikipediaArgs", query=(str, ...))
+                  "or other subjects."
+    args_schema: Optional[Type[BaseModel]] = WikipediaArgs
     doc_store: Any = None
 
     def _run(self, query: AnyStr) -> AnyStr:
@@ -56,3 +60,8 @@ class Wikipedia(BaseTool):
 
     async def _arun(self, *args: Any, **kwargs: Any) -> Any:
         raise NotImplementedError
+
+
+if __name__ == "__main__":
+    ans = Wikipedia()._run("Mars")
+    print(ans)

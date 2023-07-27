@@ -4,11 +4,8 @@ import subprocess
 from typing import AnyStr
 from typing import List
 from uuid import uuid4
-
 import pexpect
-
-from .basetool import *
-
+from gentopia.tools.basetool import *
 
 
 def _lazy_import_pexpect() -> pexpect:
@@ -133,12 +130,15 @@ def get_default_bash_process() -> BashProcess:
     return BashProcess(return_err_output=True)
 
 
+class RunShellArgs(BaseModel):
+    bash_commands: str = Field(..., description="a sequence of shell commands")
+
+
 class RunShell(BaseTool):
     name = "bash_shell"
     description = (f"A tool to run shell commands on this {get_platform()} machine. "
-                   "It returns output as a real command line interface. "
-                   "Input should be an executable shell command")
-    args_schema: Optional[Type[BaseModel]] = create_model("RunShellArgs", commands=(str, ...))
+                   "It returns output as a real command line interface. ")
+    args_schema: Optional[Type[BaseModel]] = RunShellArgs
     process: BashProcess = get_default_bash_process()
 
     def _run(self, commands: AnyStr) -> Any:

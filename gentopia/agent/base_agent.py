@@ -91,3 +91,9 @@ class BaseAgent(ABC, BaseModel):
             else:
                 function_map[plugin.name] = plugin.run
         return function_map
+
+    def clear(self):
+        """
+        Clear and reset the agent.
+        """
+        pass

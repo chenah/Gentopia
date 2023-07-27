@@ -1,7 +1,7 @@
 from typing import AnyStr
-from .basetool import *
-from .utils.document_loaders.text_loader import TextLoader
-from .utils.vector_store import VectorstoreIndexCreator
+from gentopia.tools.basetool import *
+from gentopia.tools.utils.document_loaders.text_loader import TextLoader
+from gentopia.tools.utils.vector_store import VectorstoreIndexCreator
 
 
 class SearchDocArgs(BaseModel):
@@ -12,8 +12,7 @@ class SearchDocArgs(BaseModel):
 class SearchDoc(BaseTool):
     name = "search_doc"
     args_schema: Optional[Type[BaseModel]] = SearchDocArgs
-    description: str = f"A search engine looking for relevant text chunk in the provided path to a file." \
-                       f"Input should be a search query."
+    description: str = f"A search engine looking for relevant text chunk in the provided path to a file."
 
     def _run(self, doc_path, query) -> AnyStr:
         loader = TextLoader(doc_path)
@@ -23,3 +22,9 @@ class SearchDoc(BaseTool):
 
     async def _arun(self, *args: Any, **kwargs: Any) -> Any:
         raise NotImplementedError
+
+
+if __name__ == "__main__":
+    ans = SearchDoc()._run("Award.txt", "wireless network")
+    print("output")
+    print(ans)

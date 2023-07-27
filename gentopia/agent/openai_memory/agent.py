@@ -126,6 +126,7 @@ class OpenAIMemoryChatAgent(OpenAIFunctionChatAgent):
         :return: Output of the agent.
         :rtype: AgentOutput
         """
+        self.clear()
         if output is None:
             output = BaseOutput()
         self.memory.clear_memory_II()

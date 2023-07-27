@@ -148,7 +148,7 @@ class ReactAgent(BaseAgent):
         :return: AgentOutput object.
         :rtype: AgentOutput
         """
-        self.intermediate_steps.clear()
+        self.clear()
         logging.info(f"Running {self.name + ':' + self.version} with instruction: {instruction}")
         total_cost = 0.0
         total_token = 0
@@ -192,7 +192,7 @@ class ReactAgent(BaseAgent):
         :return: AgentOutput object.
         :rtype: AgentOutput
         """
-        self.intermediate_steps.clear()
+        self.clear()
         total_cost = 0.0
         total_token = 0
         if output is None:
@@ -229,3 +229,9 @@ class ReactAgent(BaseAgent):
             output.panel_print(result, f"[green] Function Response of [blue]{action}: ")
             self.intermediate_steps[-1].append(result)
         return AgentOutput(output=content, cost=total_cost, token_usage=total_token)
+
+    def clear(self):
+        """
+        Clear and reset the agent.
+        """
+        self.intermediate_steps.clear()

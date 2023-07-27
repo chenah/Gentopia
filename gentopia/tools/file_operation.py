@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import AnyStr
-
-from .basetool import *
+from gentopia.tools.basetool import *
 
 
 class WriteFileArgs(BaseModel):

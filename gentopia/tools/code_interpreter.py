@@ -1,8 +1,8 @@
 from typing import AnyStr
-from .basetool import *
+from gentopia.tools.basetool import *
 
 
-# Jerry: This tool can be dangerous
+# Attention: This tool has no safety protection
 
 class CodeInterpreter:
     def __init__(self, timeout=300):
@@ -29,11 +29,15 @@ class CodeInterpreter:
         self.locals = {}
 
 
+class PythonCodeInterpreterArgs(BaseModel):
+    code: str = Field(..., description="python codes")
+
+
 class PythonCodeInterpreter(BaseTool):
     """Python Code Interpreter Tool"""
     name = "python_code_interpreter"
     description = "A tool to execute Python code and retrieve the command line output. Input should be executable Python code."
-    args_schema: Optional[Type[BaseModel]] = create_model("CodeInterpreter", code=(str, ...))
+    args_schema: Optional[Type[BaseModel]] = PythonCodeInterpreterArgs
     interpreter = CodeInterpreter()
 
     def _run(self, code: AnyStr) -> Any:

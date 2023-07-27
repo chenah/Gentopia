@@ -1,11 +1,13 @@
 from typing import AnyStr
 import re
 import numexpr
-from .basetool import *
+from gentopia.tools.basetool import *
 import math
 
+
 class CalculatorArgs(BaseModel):
-    expression: str = Field(..., description="A mathematical expression.")
+    expression: str = Field(..., description="a mathematical expression.")
+
 
 def _evaluate_expression(expression: str) -> str:
     try:
@@ -18,19 +20,18 @@ def _evaluate_expression(expression: str) -> str:
             )
         )
     except Exception as e:
-        raise ValueError(
-            f'LLMMathChain._evaluate("{expression}") raised error: {e}.'
+        return f"numexpr.evaluate({expression.strip()}) raised error: {e}." \
             " Please try again with a valid numerical expression"
-        )
 
     # Remove any leading and trailing brackets from the output
     return re.sub(r"^\[|\]$", "", output)
+
 
 class Calculator(BaseTool):
     """docstring for Calculator"""
     name = "calculator"
     description = "A calculator that can compute arithmetic expressions. Useful when you need to perform " \
-                  "math calculations. Input should be a mathematical expression"
+                  "numerical calculations."
     args_schema: Optional[Type[BaseModel]] = CalculatorArgs
 
     def _run(self, expression: AnyStr) -> Any:
@@ -43,5 +44,6 @@ class Calculator(BaseTool):
         raise NotImplementedError
 
 
-
-
+if __name__ == "__main__":
+    ans = Calculator()._run("1+1=")
+    print(ans)

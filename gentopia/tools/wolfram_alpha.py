@@ -2,7 +2,7 @@ import os
 from typing import AnyStr
 
 import wolframalpha
-from .basetool import *
+from gentopia.tools.basetool import *
 
 
 class CustomWolframAlphaAPITool:
@@ -25,11 +25,14 @@ class CustomWolframAlphaAPITool:
             return f"Answer: {answer}"
 
 
+class WolframAlphaArgs(BaseModel):
+    query: str = Field(..., description="a query or equations to be solved.")
+
+
 class WolframAlpha(BaseTool):
     name = "wolfram_alpha"
-    description = "A WolframAlpha search engine. Useful when you need to search for scientific knowledge or solve a Mathematical and " \
-                  "Algebraic equation. Input should be a query or equation."
-    args_schema: Optional[Type[BaseModel]] = create_model("WolframAlphaArgs", query=(str, ...))
+    description = "A WolframAlpha search engine. Useful when you need to search for scientific knowledge or solve a Mathematical and Algebraic equation."
+    args_schema: Optional[Type[BaseModel]] = WolframAlphaArgs
 
     def _run(self, query: AnyStr) -> AnyStr:
         tool = CustomWolframAlphaAPITool()
@@ -38,3 +41,8 @@ class WolframAlpha(BaseTool):
 
     async def _arun(self, *args: Any, **kwargs: Any) -> Any:
         raise NotImplementedError
+
+
+if __name__ == "__main__":
+    ans = WolframAlpha()._run("What is Mars?")
+    print(ans)
