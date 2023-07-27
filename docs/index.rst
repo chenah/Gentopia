@@ -5,16 +5,24 @@
 
 Welcome to Gentopia's documentation!
 ====================================
+.. image:: resource/logo.png
+   :align: center
+   :width: 60%
+
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    introduction
+   installation
+   quick_start
+   agent_components
+   gentpool
+
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`

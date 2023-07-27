@@ -4,6 +4,6 @@ from gentopia import chat
 
 if __name__ == '__main__':
     enable_log()
-    assembler = AgentAssembler(file='configs/mathria.yaml')
+    assembler = AgentAssembler(file='configs/rewoo_template.yaml')
     agent = assembler.get_agent()
     chat(agent)

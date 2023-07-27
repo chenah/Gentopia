@@ -1,5 +1,4 @@
 from gentopia.model.param_model import BaseParamModel
-from gentopia.prompt import fewshots
 
 def get_default_client_param_model(model_name: str) -> BaseParamModel:
     """

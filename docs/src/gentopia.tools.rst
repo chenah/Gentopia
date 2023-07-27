@@ -93,6 +93,14 @@ gentopia.tools.shell module
    :undoc-members:
    :show-inheritance:
 
+gentopia.tools.summarize module
+-------------------------------
+
+.. automodule:: gentopia.tools.summarize
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 gentopia.tools.weather module
 -----------------------------
 

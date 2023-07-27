@@ -43,6 +43,3 @@ class PromptTemplate(BaseModel):
                 )
         return values
 
-
-# For backwards compatibility.
-Prompt = PromptTemplate

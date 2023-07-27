@@ -1,14 +1,6 @@
 gentopia.tools.utils package
 ============================
 
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 4
-
-   gentopia.tools.utils.document_loaders
-
 Submodules
 ----------
 
@@ -20,10 +12,10 @@ gentopia.tools.utils.docstore module
    :undoc-members:
    :show-inheritance:
 
-gentopia.tools.utils.vector\_store module
------------------------------------------
+gentopia.tools.utils.document\_loaders module
+---------------------------------------------
 
-.. automodule:: gentopia.tools.utils.vector_store
+.. automodule:: gentopia.tools.utils.document_loaders
    :members:
    :undoc-members:
    :show-inheritance:

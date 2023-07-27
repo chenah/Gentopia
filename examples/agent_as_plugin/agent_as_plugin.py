@@ -4,6 +4,6 @@ from gentopia import chat
 
 if __name__ == '__main__':
     enable_log()
-    assembler = AgentAssembler(file='configs/main.yaml')
+    assembler = AgentAssembler(file='configs/openai_template.yaml')
     agent = assembler.get_agent()
     chat(agent, verbose=True)

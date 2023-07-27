@@ -2,7 +2,8 @@ from gentopia.prompt import PromptTemplate
 
 ZeroShotPlannerPrompt = PromptTemplate(
     input_variables=["tool_description", "task"],
-    template="""You are an AI agent who makes step-by-step plans to solve a problem under the help of external tools. 
+    template=
+"""You are an AI agent who makes step-by-step plans to solve a problem under the help of external tools. 
 For each step, make one plan followed by one tool-call, which will be executed later to retrieve evidence for that step.
 You should store each evidence into a distinct variable #E1, #E2, #E3 ... that can be referred to in later tool-call inputs.    
 
@@ -82,7 +83,8 @@ And so on...
 
 ZeroShotSolverPrompt = PromptTemplate(
     input_variables=["plan_evidence", "task"],
-    template="""You are an AI agent who solves a problem with my assistance. I will provide step-by-step plans(#Plan) and evidences(#E) that could be helpful.
+    template=
+"""You are an AI agent who solves a problem with my assistance. I will provide step-by-step plans(#Plan) and evidences(#E) that could be helpful.
 Your task is to briefly summarize each step, then make a short final conclusion for your task.
 
 ##My Plans and Evidences##

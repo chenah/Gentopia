@@ -30,7 +30,7 @@ class BaseAgent(ABC, BaseModel):
     :type llm: Union[BaseLLM, Dict[str, BaseLLM]]
     :param prompt_template: PromptTemplate instance or dictionary of PromptTemplate instances. (eg. for ReWOO, two separate PromptTemplates are needed).
     :type prompt_template: Union[PromptTemplate, Dict[str, PromptTemplate]]
-    :param plugins: List of plugins available for the agent. PLugins can be tools or other agents.
+    :param plugins: List of plugins available for the agent. PLugins can be tools or other components.
     :type plugins: List[Any]
     :param args_schema: Schema for arguments, defaults to a model with "instruction" of type str.
     :type args_schema: Optional[Type[BaseModel]]
