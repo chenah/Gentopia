@@ -8,7 +8,7 @@ setup(
     license='Apache-2.0 license',
     author='billxbf',
     author_email='billxbf@gmail.com',
-    description='Gentopia provides extensive utilities to assembles ALM components driven by configs.',
+    description='Gentopia provides extensive utilities to assembles ALM agents driven by configs.',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     extras_require={
