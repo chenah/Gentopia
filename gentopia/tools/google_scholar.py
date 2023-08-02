@@ -110,8 +110,8 @@ class AuthorUID2Paper(BaseTool):
                 'title': it['bib']["title"],
                 'pub_year': it['bib']['pub_year'],
                 'venue': it['bib']['citation'],
-                "abstract": it['bib']['abstract'],
-                'url': it['pub_url'],
+                # "abstract": it['bib']['abstract'],
+                # 'url': it['pub_url'],
                 'citation': it['num_citations'],
                 }))
         if not ans:
@@ -247,20 +247,20 @@ class SearchCitePaper(BaseTool):
 
 
 if __name__ == "__main__":
-    import pdb
-    searcher1 = SearchAuthorByName()
-    ans1 = searcher1._run("Tan Lee")
+    # import pdb
+    # searcher1 = SearchAuthorByName()
+    # ans1 = searcher1._run("Tan Lee")
     # ans2 = searcher1._run("Tan Lee")
-    # searcher3 = AuthorUID2Paper()
-    # searcher3._run("5VTS11IAAAAJ")
+    searcher3 = AuthorUID2Paper()
+    searcher3._run("5VTS11IAAAAJ", sort_by='year')
     # searcher4 = SearchPaper()
     # ans4 = searcher4._run("Attention is all you need")
     # searcher5 = SearchAuthorByInterests()
     # searcher5._run("privacy,robustness")
     # print(ans4)
     # pdb.set_trace()
-    search6 = SearchRelatedPaper()
-    ans = search6._run("Attention is all you need")
+    # search6 = SearchRelatedPaper()
+    # ans = search6._run("Attention is all you need")
     # search7 = SearchCitePaper()
     # ans = search7._run("Attention is all you need")
-    print(ans)
+    # print(ans)
