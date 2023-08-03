@@ -4,7 +4,7 @@ from gentopia.tools.basetool import *
 
 
 class GoogleSearchArgs(BaseModel):
-    search_query: str = Field(..., description="a search query")
+    query: str = Field(..., description="a search query")
 
 
 class GoogleSearch(BaseTool):

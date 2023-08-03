@@ -2,7 +2,8 @@ from gentopia.prompt import PromptTemplate
 
 ZeroShotReactPrompt = PromptTemplate(
     input_variables=["instruction", "agent_scratchpad", "tool_names", "tool_description"],
-    template="""Answer the following questions as best you can. You have access to the following tools:
+    template=
+"""Answer the following questions as best you can. You have access to the following tools:
 {tool_description}.
 Use the following format:
 

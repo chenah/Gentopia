@@ -1,5 +1,6 @@
 from .basetool import BaseTool
 from .google_search import GoogleSearch
+from .google_scholar import *
 from .calculator import Calculator
 from .wikipedia import Wikipedia
 from .wolfram_alpha import WolframAlpha
@@ -35,6 +36,12 @@ def load_tools(name: str) -> BaseTool:
         "web_page": WebPage,
         "wolfram_alpha": WolframAlpha,
         "duckduckgo": DuckDuckGo,
+        "search_author_by_name": SearchAuthorByName,
+        "search_author_by_interests": SearchAuthorByInterests,
+        "author_uid2paper": AuthorUID2Paper,
+        "search_paper": SearchPaper,
+        "search_related_paper": SearchRelatedPaper,
+        "search_cite_paper": SearchCitePaper,
     }
     if name not in name2tool:
         raise NotImplementedError
