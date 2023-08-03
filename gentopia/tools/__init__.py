@@ -11,6 +11,7 @@ from .search_doc import SearchDoc
 from .gradio import *
 from .code_interpreter import PythonCodeInterpreter
 from .file_operation import WriteFile, ReadFile
+from .duckduckgo import DuckDuckGo
 
 
 def load_tools(name: str) -> BaseTool:
@@ -33,6 +34,7 @@ def load_tools(name: str) -> BaseTool:
         "wikipedia": Wikipedia,
         "web_page": WebPage,
         "wolfram_alpha": WolframAlpha,
+        "duckduckgo": DuckDuckGo,
     }
     if name not in name2tool:
         raise NotImplementedError

@@ -79,6 +79,7 @@ class BaseOutput:
         None
         """
         self.logger = logging
+        self.log = []
 
     def stop(self):
         """
@@ -195,6 +196,8 @@ class BaseOutput:
         --------
         None
         """
+        if not stream:
+            self.log.append(item)
         if check_log():
             self.logger.info('-'*20)
             self.logger.info(item)
@@ -227,6 +230,7 @@ class BaseOutput:
         --------
         None
         """
+        self.log.append(content)
         if check_log():
             self.logger.info(content)
 
