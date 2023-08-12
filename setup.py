@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='gentopia',
-    version='0.0.2',
+    version='0.0.3',
     packages=find_packages(exclude=['llm', 'llm.*']),
     url='https://github.com/Gentopia-AI/Gentopia',
     license='MIT license',
@@ -41,7 +41,7 @@ setup(
         'pexpect',
         'gradio_client',
         'pinecone-client',
-        'chroma',
         'chromadb',
+        'tiktoken',
     ],
 )

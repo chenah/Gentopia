@@ -20,7 +20,7 @@ class ArxivSearch(BaseTool):
     top_k: int = 5
     maxlen_per_page = 2000
 
-    def _run(self, query: AnyStr) -> AnyStr:
+    def _run(self, query: AnyStr) -> AnyStr: 
         # arxiv_exceptions: Any  # :meta private:
         top_k_results = self.top_k
         doc_content_chars_max = self.maxlen_per_page
