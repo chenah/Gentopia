@@ -98,6 +98,24 @@ class MATHVCMetaPlannerSystem:
         self._monitor_collaboration_stage()
         
         return speaker_control_result
+
+    def _generate_initial_discussion(self, user_input: str) -> Dict[str, Any]:
+        """
+        生成初始的多角色讨论
+        """
+        initial_discussion = []
+        for agent_name in self.agents:
+            response = self._generate_character_response_two_step(agent_name, user_input)
+            initial_discussion.append({
+                'speaker': self.agents[agent_name]['name'],
+                'message': response
+            })
+            self.conversation_history.append({
+                'speaker': self.agents[agent_name]['name'],
+                'message': response,
+                'timestamp': time.time()
+            })
+        return {'initial_discussion': initial_discussion}
     
     def _dialogue_speaker_control(self, user_input: str) -> Dict[str, Any]:
         """
@@ -136,34 +154,32 @@ class MATHVCMetaPlannerSystem:
                 # 如果有明确指定的target_agent，使用它；否则使用预测的next_speaker
                 actual_speaker = speaker_candidates.get('target_agent', next_speaker)
                 print(f"Meta Planner: 实际发言者 -> {actual_speaker}")
-                
+
                 if not actual_speaker:
                     raise ValueError("actual_speaker is None or empty")
-                
+
                 response = self._generate_character_response(actual_speaker, user_input)
-                speaker_name = actual_speaker.replace("mathvc_", "").capitalize()
-                
+                speaker_name = self.agents[actual_speaker]['name']
+
                 # 记录到对话历史
                 self.conversation_history.append({
                     'speaker': speaker_name,
                     'message': response,
                     'timestamp': time.time()
                 })
-                
+
                 return {
-                    'type': 'single_character_response',
-                    'speaker': actual_speaker,
-                    'response': response,
-                    'wait_strategy': 'immediate',
-                    'current_stage': self.get_current_stage_name(),
-                    'meta_planner_status': f'代理直接响应: {speaker_name}'
+                    'speaker': speaker_name,
+                    'message': response
                 }
             except Exception as e:
                 print(f"Meta Planner: agent_only分支处理出错 -> {e}")
-                print(f"speaker_candidates: {speaker_candidates}")
-                print(f"next_speaker: {next_speaker}")
-                raise e
-            
+                # Fallback response
+                return {
+                    'speaker': 'System',
+                    'message': 'Sorry, an error occurred while generating a response.'
+                }
+
         else:  # mixed_candidates
             # 混合候选（用户+代理）- 10秒超时等待
             return {
