@@ -1,0 +1,44 @@
+name: "MATHVC_EvaluatorAgent"
+version: "1.0"
+type: "vanilla"
+description: "MATHVC系统评估代理，评估解决方案和学习效果"
+target_tasks:
+  - "评估解决方案"
+  - "评估学习效果"
+  - "提供反馈"
+
+llm:
+  model_name: "Qwen/Qwen3-Next-80B-A3B-Instruct"
+  base_url: "https://api-inference.modelscope.cn/v1"
+  api_key: "ms-38f326cf-a318-43c3-bdfc-6b3395773378"
+  params:
+    temperature: 0.2
+    max_tokens: 2048
+    top_p: 1.0
+
+prompt_template:
+  input_variables: ["instruction", "context"]
+  template: |
+    你是MATHVC系统中的评估代理，你的任务是评估解决方案和学习效果，提供有建设性的反馈。
+    
+    你的角色特点：
+    1. 能够客观评估解决方案的正确性和有效性
+    2. 能够识别学习过程中的优点和不足
+    3. 能够提供具体、有建设性的反馈
+    4. 能够建议改进方向
+    
+    上下文信息：{context}
+    
+    当前任务：{instruction}
+    
+    请以评估者的身份回应，提供客观的评估和有建设性的反馈。你的回应应该有助于改进解决方案和学习效果。
+
+plugins: []
+
+memory:
+  memory_type: "Chroma"
+  conversation_threshold: 2
+  reasoning_threshold: 2
+  params:
+    index: "mathvc_evaluator_memory"
+    top_k: 5

@@ -1,0 +1,50 @@
+name: "MATHVC_MetaPlanner"
+version: "1.0"
+type: "vanilla"
+description: "MATHVC系统元规划器，负责协调和管理各个角色代理"
+target_tasks:
+  - "数学教育任务规划"
+  - "角色代理协调"
+  - "系统决策管理"
+
+llm:
+  model_name: "Qwen/Qwen3-Next-80B-A3B-Instruct"
+  base_url: "https://api-inference.modelscope.cn/v1"
+  api_key: "ms-38f326cf-a318-43c3-bdfc-6b3395773378"
+  params:
+    temperature: 0.2
+    max_tokens: 2048
+    top_p: 1.0
+
+prompt_template:
+  input_variables: ["instruction"]
+  template: |
+    你是MATHVC系统的元规划器，负责协调和管理各个角色代理以完成数学教育任务。
+    
+    你的主要职责包括：
+    1. 分析用户的数学问题或教育需求
+    2. 确定需要激活的角色代理组合
+    3. 协调各角色代理之间的交互
+    4. 整合各代理的输出并提供最终解决方案
+    
+    可用的角色代理包括：
+    - 学生代理：模拟学生思维，提出问题和困惑
+    - 教师代理：提供指导和解释
+    - 专家代理：提供专业知识和深入分析
+    - 评估代理：评估解决方案和学习效果
+    
+    当前用户指令：{instruction}
+    
+    请分析这个指令，并制定一个详细的执行计划，包括需要激活的角色代理及其任务分配。
+    
+    执行计划：
+
+plugins: []
+
+memory:
+  memory_type: "Chroma"
+  conversation_threshold: 2
+  reasoning_threshold: 2
+  params:
+    index: "mathvc_metaplanner_memory"
+    top_k: 5

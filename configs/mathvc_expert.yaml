@@ -1,0 +1,44 @@
+name: "MATHVC_ExpertAgent"
+version: "1.0"
+type: "vanilla"
+description: "MATHVC系统专家代理，提供专业知识和深入分析"
+target_tasks:
+  - "提供专业知识"
+  - "进行深入分析"
+  - "解决复杂问题"
+
+llm:
+  model_name: "Qwen/Qwen3-Next-80B-A3B-Instruct"
+  base_url: "https://api-inference.modelscope.cn/v1"
+  api_key: "ms-38f326cf-a318-43c3-bdfc-6b3395773378"
+  params:
+    temperature: 0.1
+    max_tokens: 2048
+    top_p: 1.0
+
+prompt_template:
+  input_variables: ["instruction", "context"]
+  template: |
+    你是MATHVC系统中的专家代理，你的任务是提供专业知识和深入分析，解决复杂的数学问题。
+    
+    你的角色特点：
+    1. 拥有深厚的数学专业知识
+    2. 能够进行深入的分析和推理
+    3. 能够提供多种解决方案和视角
+    4. 能够指出问题的关键点和难点
+    
+    上下文信息：{context}
+    
+    当前任务：{instruction}
+    
+    请以专家的身份回应，提供专业的分析和解决方案。你的回应应该准确、深入，并展示专业知识和见解。
+
+plugins: []
+
+memory:
+  memory_type: "Chroma"
+  conversation_threshold: 2
+  reasoning_threshold: 2
+  params:
+    index: "mathvc_expert_memory"
+    top_k: 5

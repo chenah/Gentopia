@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MATHVC - 多角色虚拟数学课堂</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        .header {
+            background-color: #4a6fdc;
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .chat-container {
+            height: 65vh;
+            overflow-y: auto;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+        }
+        .message {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+        .user-message {
+            background-color: #e9f5ff;
+            margin-left: auto;
+            border-bottom-right-radius: 0;
+        }
+        .system-message {
+            background-color: #f0f0f0;
+            margin: 0 auto;
+            text-align: center;
+            font-style: italic;
+            color: #666;
+            max-width: 60%;
+        }
+        .agent-message {
+            background-color: #f8f9fa;
+            border-bottom-left-radius: 0;
+        }
+        .agent-message.alice {
+            background-color: #ffe6e6;
+            border-left: 4px solid #ff9999;
+        }
+        .agent-message.bob {
+            background-color: #e6f2ff;
+            border-left: 4px solid #66b3ff;
+        }
+        .agent-message.charlie {
+            background-color: #e6ffe6;
+            border-left: 4px solid #66cc66;
+        }
+        .agent-message.metaplanner {
+            background-color: #f0e6ff;
+            border-left: 4px solid #cc99ff;
+        }
+        .agent-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            margin-right: 0.5rem;
+            font-weight: bold;
+        }
+        .agent-badge.alice {
+            background-color: #ff9999;
+            color: #660000;
+        }
+        .agent-badge.bob {
+            background-color: #66b3ff;
+            color: #003366;
+        }
+        .agent-badge.charlie {
+            background-color: #66cc66;
+            color: #003300;
+        }
+        .agent-badge.metaplanner {
+            background-color: #cc99ff;
+            color: #330066;
+        }
+        .input-container {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .status-container {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+        }
+        .status-item {
+            margin-bottom: 0.5rem;
+        }
+        .status-label {
+            font-weight: bold;
+            color: #495057;
+        }
+        .status-value {
+            color: #6c757d;
+        }
+        .stage-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        .stage-0 { background-color: #e6f7ff; color: #0050b3; }
+        .stage-1 { background-color: #f6ffed; color: #389e0d; }
+        .stage-2 { background-color: #fff7e6; color: #d46b08; }
+        .stage-3 { background-color: #fff0f6; color: #c41d7f; }
+        .stage-4 { background-color: #f9f0ff; color: #722ed1; }
+        .loading-indicator {
+            display: none;
+            text-align: center;
+            padding: 1rem;
+        }
+        .footer {
+            margin-top: 2rem;
+            padding: 1rem 0;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .markdown-content {
+            line-height: 1.6;
+        }
+        .markdown-content p {
+            margin-bottom: 0.5rem;
+        }
+        .markdown-content ul, .markdown-content ol {
+            padding-left: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .markdown-content code {
+            background-color: #f1f1f1;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .markdown-content pre {
+            background-color: #f1f1f1;
+            padding: 1rem;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+        .markdown-content blockquote {
+            border-left: 4px solid #ddd;
+            padding-left: 1rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        .markdown-content h1, .markdown-content h2, .markdown-content h3 {
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .markdown-content h4, .markdown-content h5, .markdown-content h6 {
+            margin-top: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .btn-custom {
+            background-color: #4a6fdc;
+            border-color: #4a6fdc;
+            color: white;
+        }
+        .btn-custom:hover {
+            background-color: #3a5dcc;
+            border-color: #3a5dcc;
+            color: white;
+        }
+        .btn-outline-custom {
+            color: #4a6fdc;
+            border-color: #4a6fdc;
+        }
+        .btn-outline-custom:hover {
+            background-color: #4a6fdc;
+            border-color: #4a6fdc;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1 class="mb-0"><i class="bi bi-mortarboard-fill me-2"></i>MATHVC - 多角色虚拟数学课堂</h1>
+            <p class="mb-0">基于大语言模型的多角色协作数学教育系统</p>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="status-container">
+                    <h5 class="mb-3">系统状态</h5>
+                    <div class="status-item">
+                        <span class="status-label">当前阶段：</span>
+                        <span class="status-value" id="current-stage">初始化中...</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">下一位发言者：</span>
+                        <span class="status-value" id="next-speaker">等待中...</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">用户回合：</span>
+                        <span class="status-value" id="user-turn">是</span>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-outline-custom btn-sm w-100" onclick="loadStatus()">
+                            <i class="bi bi-arrow-clockwise me-1"></i>刷新状态
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="status-container mt-3">
+                    <h5 class="mb-3">角色介绍</h5>
+                    <div class="mb-2">
+                        <span class="agent-badge alice">Alice</span>
+                        <small class="text-muted">数学能力较差</small>
+                    </div>
+                    <div class="mb-2">
+                        <span class="agent-badge bob">Bob</span>
+                        <small class="text-muted">数学能力中等</small>
+                    </div>
+                    <div class="mb-2">
+                        <span class="agent-badge charlie">Charlie</span>
+                        <small class="text-muted">数学能力较好</small>
+                    </div>
+                    <div class="mb-2">
+                        <span class="agent-badge metaplanner">元规划器</span>
+                        <small class="text-muted">系统协调者</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-9">
+                <div class="chat-container" id="chat-container">
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-chat-square-text display-1"></i>
+                        <p class="mt-3">欢迎来到MATHVC多角色虚拟数学课堂！</p>
+                        <p>请输入一个数学问题开始对话，系统将自动协调多个角色进行协作讨论。</p>
+                    </div>
+                </div>
+                
+                <div class="loading-indicator" id="loading-indicator">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">加载中...</span>
+                    </div>
+                    <p class="mt-2">正在思考中，请稍候...</p>
+                </div>
+                
+                <div class="input-container">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="user-input" placeholder="输入您的数学问题或评论..." onkeypress="handleKeyPress(event)">
+                        <button class="btn btn-custom" type="button" onclick="sendMessage()">
+                            <i class="bi bi-send-fill"></i> 发送
+                        </button>
+                        <button class="btn btn-outline-secondary" type="button" onclick="clearChat()">
+                            <i class="bi bi-trash3-fill"></i> 清空
+                        </button>
+                    </div>
+                    <div class="form-text text-muted mt-2">
+                        提示：系统会自动协调多个角色进行协作讨论，您可以随时参与对话。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p class="mb-0">MATHVC系统 - 基于论文《MATHVC: An LLM-Simulated Multi-Character Virtual Classroom for Mathematics Education》</p>
+            <p class="mb-0">© 2024 多角色虚拟数学课堂系统</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 页面加载时获取对话历史
+        window.onload = function() {
+            loadChatHistory();
+            loadStatus();
+        };
+
+        // 处理回车键发送消息
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // 发送消息
+        function sendMessage() {
+            const input = document.getElementById('user-input');
+            const message = input.value.trim();
+            
+            if (!message) {
+                return;
+            }
+            
+            // 显示用户消息
+            addMessage('用户', message, 'user-message');
+            
+            // 清空输入框
+            input.value = '';
+            
+            // 显示加载指示器
+            document.getElementById('loading-indicator').style.display = 'block';
+            
+            // 发送请求到后端
+            fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // 隐藏加载指示器
+                document.getElementById('loading-indicator').style.display = 'none';
+                
+                if (data.error) {
+                    addMessage('系统', `错误: ${data.error}`, 'system-message');
+                } else {
+                    // 更新状态信息
+                    updateStatus(data);
+                    
+                    // 显示系统响应
+                    const speaker = data.next_speaker || '系统';
+                    addMessage(speaker, data.response, 'agent-message', speaker.toLowerCase());
+                }
+            })
+            .catch(error => {
+                // 隐藏加载指示器
+                document.getElementById('loading-indicator').style.display = 'none';
+                
+                console.error('Error:', error);
+                addMessage('系统', `请求失败: ${error.message}`, 'system-message');
+            });
+        }
+
+        // 添加消息到聊天容器
+        function addMessage(speaker, message, messageType, agentType = null) {
+            const chatContainer = document.getElementById('chat-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${messageType}`;
+            
+            if (agentType) {
+                messageDiv.classList.add(agentType);
+            }
+            
+            // 创建消息头部
+            const messageHeader = document.createElement('div');
+            messageHeader.className = 'message-header';
+            
+            if (speaker === '用户') {
+                messageHeader.innerHTML = `<strong>${speaker}</strong>`;
+            } else if (speaker === '系统' || speaker === '元规划器') {
+                const badgeClass = speaker === '元规划器' ? 'metaplanner' : '';
+                messageHeader.innerHTML = `<span class="agent-badge ${badgeClass}">${speaker}</span>`;
+            } else {
+                const badgeClass = agentType || '';
+                messageHeader.innerHTML = `<span class="agent-badge ${badgeClass}">${speaker}</span>`;
+            }
+            
+            // 创建消息内容
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content markdown-content';
+            
+            // 简单的Markdown处理
+            let formattedMessage = message
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`(.*?)`/g, '<code>$1</code>')
+                .replace(/\n/g, '<br>');
+            
+            messageContent.innerHTML = formattedMessage;
+            
+            // 添加头部和内容到消息div
+            messageDiv.appendChild(messageHeader);
+            messageDiv.appendChild(messageContent);
+            
+            // 添加消息到聊天容器
+            chatContainer.appendChild(messageDiv);
+            
+            // 滚动到底部
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // 清空聊天记录
+        function clearChat() {
+            if (confirm('确定要清空所有对话记录吗？')) {
+                fetch('/api/clear', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 清空聊天容器
+                        const chatContainer = document.getElementById('chat-container');
+                        chatContainer.innerHTML = `
+                            <div class="text-center text-muted py-5">
+                                <i class="bi bi-chat-square-text display-1"></i>
+                                <p class="mt-3">对话记录已清空</p>
+                                <p>请输入一个数学问题开始新的对话。</p>
+                            </div>
+                        `;
+                        
+                        // 重置状态显示
+                        document.getElementById('current-stage').textContent = '初始化中...';
+                        document.getElementById('next-speaker').textContent = '等待中...';
+                        document.getElementById('user-turn').textContent = '是';
+                    } else {
+                        alert('清空失败: ' + (data.error || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('清空失败: ' + error.message);
+                });
+            }
+        }
+
+        // 加载对话历史
+        function loadChatHistory() {
+            fetch('/api/history')
+                .then(response => response.json())
+                .then(data => {
+                    const chatContainer = document.getElementById('chat-container');
+                    
+                    // 清空聊天容器
+                    chatContainer.innerHTML = '';
+                    
+                    if (data.history && data.history.length > 0) {
+                        // 添加历史消息
+                        data.history.forEach(entry => {
+                            const speaker = entry.speaker;
+                            const message = entry.message;
+                            
+                            if (speaker === '用户') {
+                                addMessage(speaker, message, 'user-message');
+                            } else if (speaker === '元规划器') {
+                                addMessage(speaker, message, 'agent-message', 'metaplanner');
+                            } else {
+                                addMessage(speaker, message, 'agent-message', speaker.toLowerCase());
+                            }
+                        });
+                    } else {
+                        // 显示欢迎消息
+                        chatContainer.innerHTML = `
+                            <div class="text-center text-muted py-5">
+                                <i class="bi bi-chat-square-text display-1"></i>
+                                <p class="mt-3">欢迎来到MATHVC多角色虚拟数学课堂！</p>
+                                <p>请输入一个数学问题开始对话，系统将自动协调多个角色进行协作讨论。</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        // 加载系统状态
+        function loadStatus() {
+            fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    updateStatus(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        // 更新状态显示
+        function updateStatus(data) {
+            // 更新当前阶段
+            const currentStage = data.current_stage || '初始化中...';
+            const stageIndex = ['建立共享任务理解（Establish a shared task understanding）',
+                              '建立团队组织（Establish team organization）',
+                              '规划问题解决行动（Plan actions for problem-solving）',
+                              '执行问题解决行动（Execute actions for problem-solving）',
+                              '验证答案（Validating the answer）'].indexOf(currentStage);
+            
+            const stageElement = document.getElementById('current-stage');
+            if (stageIndex >= 0) {
+                stageElement.innerHTML = `<span class="stage-indicator stage-${stageIndex}">${currentStage}</span>`;
+            } else {
+                stageElement.textContent = currentStage;
+            }
+            
+            // 更新下一位发言者
+            const nextSpeaker = data.next_speaker || '等待中...';
+            document.getElementById('next-speaker').textContent = nextSpeaker;
+            
+            // 更新用户回合状态
+            const userTurn = data.is_user_turn ? '是' : '否';
+            const userTurnElement = document.getElementById('user-turn');
+            userTurnElement.textContent = userTurn;
+            userTurnElement.style.color = data.is_user_turn ? '#28a745' : '#dc3545';
+        }
+    </script>
+</body>
+</html>

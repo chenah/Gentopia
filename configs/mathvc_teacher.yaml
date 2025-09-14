@@ -1,0 +1,44 @@
+name: "MATHVC_TeacherAgent"
+version: "1.0"
+type: "vanilla"
+description: "MATHVC系统教师代理，提供指导和解释"
+target_tasks:
+  - "提供指导和解释"
+  - "设计教学方法"
+  - "回答学生问题"
+
+llm:
+  model_name: "Qwen/Qwen3-Next-80B-A3B-Instruct"
+  base_url: "https://api-inference.modelscope.cn/v1"
+  api_key: "ms-38f326cf-a318-43c3-bdfc-6b3395773378"
+  params:
+    temperature: 0.3
+    max_tokens: 2048
+    top_p: 1.0
+
+prompt_template:
+  input_variables: ["instruction", "context"]
+  template: |
+    你是MATHVC系统中的教师代理，你的任务是提供指导和解释，帮助学生理解数学概念。
+    
+    你的角色特点：
+    1. 擅长将复杂的数学概念简化为易于理解的形式
+    2. 能够提供清晰的解释和示例
+    3. 有耐心，能够重复解释概念
+    4. 能够根据学生的反馈调整教学方法
+    
+    上下文信息：{context}
+    
+    当前任务：{instruction}
+    
+    请以教师的身份回应，提供清晰的指导和解释。你的回应应该具有教育性，能够帮助学生理解数学概念。
+
+plugins: []
+
+memory:
+  memory_type: "Chroma"
+  conversation_threshold: 2
+  reasoning_threshold: 2
+  params:
+    index: "mathvc_teacher_memory"
+    top_k: 5

@@ -1,0 +1,2089 @@
+MATHVC: An LLM-Simulated Multi-Character Virtual Classroom for
+Mathematics Education
+Murong Yue1*,Wenhan Lyu2∗, Wijdane Mifdal1, Jennifer Suh3, Yixuan Zhang2, Ziyu Yao1
+1Department of Computer Science, George Mason University
+2Department of Computer Science, College of William&Mary
+3Mathematics Education, School of Education, George Mason University
+{myue,wmifdal,jsuh4,ziyuyao }@gmu.edu {wlyu, yzhang104 }@wm.edu
+Abstract
+Mathematical modeling (MM) is considered a funda-
+mental skill for students in STEM disciplines. Effective
+MM practice often involves group discussions and col-
+laborative problem-solving. However, due to unevenly
+distributed teacher resources and various circumstances,
+students do not always receive equally effective opportu-
+nities for such engagement. Excitingly, large language
+models (LLMs) have recently demonstrated strong ca-
+pability in both modeling mathematical problems and
+simulating characters with different traits and properties.
+Drawing inspiration from the advancement of LLMs, in
+this work, we present MATHVC, the very first LLM-
+powered virtual classroom containing multiple LLM-
+simulated student characters, with whom a human stu-
+dent can practice their MM skill. To encourage each
+LLM character’s behaviors to be aligned with their spec-
+ified math-relevant properties (termed “characteristics
+alignment” ) and the overall conversational procedure to
+be close to an authentic student MM discussion (termed
+“conversational procedural alignment” ), we proposed
+three innovations: integrating MM domain knowledge
+into the simulation, defining symbolic schema as the
+ground for character simulation, and designing a meta
+planner to guide the conversational process. Our ex-
+periments and ablation studies validate our simulation
+method and demonstrate MATHVC’s potential to en-
+hance real-world student learning.
+1 Introduction
+Mathematical modeling (MM), the process of creating a math-
+ematical representation of a real-world problem, is a critical
+skill for students pursuing STEM fields. Practicing this skill
+often requires students to engage in effective discussions
+of relevant concepts and collaboratively solve mathematics
+problems with their classmates (Vygotsky and Cole 1978;
+Garfunkel and Montgomery 2019). However, due to the lim-
+ited amount of teachers who are well-trained to facilitate
+collaborative MM discussions, students from marginalized
+communities do not often receive equal opportunities to effec-
+tively practice their MM skills, as reported by the Opportunity
+Myth report (TNTP 2018). On the other hand, certain student
+*Equal Contribution
+Copyright ©2025, Association for the Advancement of Artificial
+Intelligence (www.aaai.org). All rights reserved.populations, such as students suffering from mental barriers
+(e.g., anxiety) in peer interaction, or students coming from
+populations that historically show inferior performance in
+STEM disciplines and thus display low self-esteem, may con-
+front further challenges that prevent them from effectively
+engaging in collaborative MM discussions.
+The rapidly developing large language models (LLMs)
+have shown huge potential to reshape the future of education
+(including Mathematics) (Denny et al. 2024). This potential
+stems from two recent advancements unique to LLMs. Firstly,
+LLMs present strong math reasoning capabilities in under-
+standing and solving mathematics problems (Wei et al. 2022;
+Lu et al. 2023; Ahn et al. 2024). In particular, on the GSM8k
+dataset (Cobbe et al. 2021) representing middle-school math-
+ematics level, the state-of-the-art GPT-4 model has achieved
+close to perfect performance (OpenAI et al. 2024). Secondly,
+by generating human-like thoughts and actions in explicit
+texts, autonomous LLM-based generative agents have show-
+cased the capacity to simulate human activities (Park et al.
+2023; Wang, Chiu, and Chiu 2023; Zhou et al. 2023). Lever-
+aging this capability, studies have explored simulating human
+behaviors in different scenarios, such as games (Wang et al.
+2023a), social activities (Li, Zhang, and Sun 2023; Cheng
+and Chin 2024), and software engineering (Hong et al. 2023;
+Qian et al. 2023).
+Observing the pressing need to enhance MM education for
+resource-limited and inherently disadvantaged communities
+and getting inspired by the striking progress made by LLMs,
+in this work, we propose MATHVC, a Mathematics Virtual
+Classroom (Figure 1) featuring multiple LLM-simulated stu-
+dent characters, with whom a human student can discuss and
+collaboratively solve MM problems. In particular, the plat-
+form focused on middle-school math problems, a difficulty
+level that current advanced LLMs have handled well. Such
+a platform thus allows students to practice their MM skills
+without needing the teachers to monitor the collaborative
+discussions. Students having difficulty in real-life peer inter-
+action can also receive effective practices through interacting
+with virtual peers. To the best of our knowledge, our research
+is the firstwork exploring the potential of leveraging multi-
+0We use the three names as “placeholders” following the conver-
+sion in science and engineering literature (Wikipedia n.d.); however,
+we envision the system to be used by various communities.arXiv:2404.06711v2  [cs.CL]  30 Jan 2025
+
+Header section displa ying t he curr ent mat h 
+pr oblem and oper ational contr ols.User guidePr oblem nameEnd/Continue question butt on
+Main con v ersation ar ea
+Allo ws t he user t o r espond
+or skip t heir turnMessage input ar eaIndicat es t hat an agent will 
+send a message shor t lyIndicat es user's 
+turn t o speakFigure 1: The current interface of M ATHVC, where students are presented a math problem and engage in effective discussions
+on math modeling. A human student can choose to respond or skip the current turn. The virtual peers, Alice, Bob, and Charlie,
+are all LLM-simulated characters.
+LLM agents for mathematics education. Notably, MATHVC
+allows teachers to flexibly configure the attributes (e.g., back-
+grounds and math skill levels) of the virtual students based
+on the human student’s performance, such that the human
+student can improve their MM skills from the interaction.
+We consider this configuration as a new paradigm of teacher
+supervision at the meta-level , as opposed to directly supervis-
+ing the student discussion. We envision that MATHVCcan
+eventually be deployed as part of the middle-school curricu-
+lum, enabling effective MM learning to go beyond the space
+constraint in traditional classroom studies while enhancing
+students’ MM capability.
+To better simulate a real discussion, we identified two
+unique challenges in the development of MATHVC. The
+first challenge is characteristic alignment , i.e., aligning an
+LLM’s character simulation to the authentic characteristics
+of real human students . Middle-school students in real life
+could struggle with rapid and accurate modeling. They may
+initially produce incomplete or erroneous mathematical mod-
+els and refine them iteratively as the discussion progresses.
+This process of gradually establishing mutual understanding
+with teammates, interleaved by continual self-reflection, is
+the key for students to improve their MM skills. However, in
+our preliminary experiments using LLMs, a vanilla character
+simulation via prompt engineering of the profile instruction
+to the LLM cannot yield such an authentic and fine-grained
+student simulation. Instead, it often directly gives a close-to-
+perfect solution, even when prompted to simulate students
+with poor math skills. Simulating how a student’s problem
+understanding and modeling evolve during the collaboration,
+is even more difficult. On the other hand, we also aim to
+simulate students at different math skill levels . One study
+found that students often benefit more from interacting withmixed-ability peers rather than those with significantly higher
+achievement (Lou 2013). Simulating students at different
+performance levels, especially low-achieving students, en-
+courages the student users to establish a more robust concept
+understanding and participate more actively in discussions,
+such as by correcting the mistakes made by the simulated
+peers. We consider this simulation a goal of characteristic
+alignment as well.
+The second challenge is conversational procedural align-
+ment , i.e., aligning the overall conversational procedure to
+an authentic MM discussion among middle-school students.
+While the first challenge concerns individual characters’ sim-
+ulation, this second challenge considers inter-character inter-
+action. In practice, a collaborative problem-solving process
+typically consists of multiple stages, including problem un-
+derstanding, task division, solution planning, plan execution,
+etc. (PISA 2018). There is evidence suggesting that struc-
+tured collaborative learning, where students work together
+with multiple discussion stages, clear roles, and shared goals,
+tends to be more effective than simply having the most knowl-
+edgeable student (in our case, this is a vanilla LLM simulated
+student) give direct answers to the group (Rajaram and Ra-
+jaram 2021). It can increase student engagement, stimulate
+positive emotions and excitement, and have a positive im-
+pact on student academic performance. However, when we
+directly exposed the group of LLM characters to interact with
+each other, these LLM characters often bypassed the earlier
+stages and instead, initiated the conversation by immediately
+describing a solution.
+To tackle these challenges, we propose to integrate rel-
+evant theories of MM and collaborative problem-solving
+(CPS) (Standards 2010; PISA 2018) into the development of
+MATHVC. Specifically, to enhance characteristics alignment,
+
+we propose using a symbolic character schema to represent
+thedynamic problem understanding process of a character.
+The character schema centers around “variables” that are
+essential for solving the mathematics problem, which are
+considered fundamental elements in MM theory (Standards
+2010). By considering it as a “ground”, we can simulate
+characters with more intricate behaviors, including how they
+make a mistake initially and then gradually fix it during the
+collaboration with other students. Unlike us, previous LLM-
+based simulations have mostly used unstructured texts to
+represent a character’s memory (Park et al. 2023). However,
+our preliminary experiment showed that the unstructured text
+representation often yielded hallucinations in simulating a
+student’s math thinking (e.g., a sharp change in a student’s
+problem understanding without contexts) and also caused
+higher latency. Using symbolic schemas can fundamentally
+solve these issues and enhance “characteristics alignment”.
+To enhance conversational procedural alignment, we further
+propose a meta planner at the platform level, which monitors
+the overall conversation and plans its procedure following
+the stages defined in the CPS theory (PISA 2018).
+Through experiments and ablation studies, we confirmed
+the effectiveness of our simulation. Specifically, we com-
+pared MATHVCwith vanilla character simulation as well
+as its variants when it is augmented with math theories in
+prompt formulation or is equipped with our proposed char-
+acter schema and meta planner. The results showed that
+MATHVCcan achieve the best performance for simulating
+both individual characters and character interaction. Overall,
+our generated multi-character dialogues can better reflect the
+predefined student characteristics and are more akin to con-
+versations among real middle-school students in collaborative
+MM tasks. We also conducted a series of ablation studies
+for two key components in MATHVC(i.e., meta planner and
+the character schema); the results validated the necessity of
+our proposed prompt designs. In summary, our results indi-
+cate that MATHVChas huge potential for being deployed to
+serve middle-school students in real life, and our proposed
+approaches can be generalized to resolve similar alignment
+problems in other applications.
+2MATHVC: An LLM-Powered Mathematics
+Virtual Classroom
+2.1 Overview
+Our goal is to develop a “virtual classroom” platform with
+multiple LLM-simulated student characters discussing and
+collaboratively solving MM tasks. We propose to design
+MATHVCwith a modular architecture as shown in Figure 3.
+Specifically, the system consists of two parts, i.e., meta plan-
+nerfor organizing the overall conversation and facilitating a
+smooth multi-stage student discussion, and character simu-
+lation for creating and updating individual student characters.
+All modules in MATHVCare implemented by prompting
+an LLM (e.g., GPT-4) with specialized scripts, mostly in
+zero-shot (except for Dialogue Act Generator in few-shot).2.2 Symbolic Representations for Task and
+Character Modeling
+A key innovation of MATHVClies in the use of symbolic
+schemas describing how characters form and gradually up-
+date their understanding of the mathematics problem. Specif-
+ically, we design two schema representations. Task Schema
+is a template describing elements that are necessary for solv-
+ing a given MM task. As shown in Figure 2 (left), a task
+schema specifies how the original mathematics problem can
+be decomposed into multiple sub-tasks, and for each sub-task,
+what variables should be defined to resolve it. In other words,
+a task schema shows the ground-truth understanding and
+modeling of a mathematics problem. We define the schema
+centering around “variables” because they are considered the
+fundamental elements in MM (Standards 2010). In practice,
+this schema can be automatically generated by prompting an
+LLM with the mathematics question and the ground-truth
+step-by-step solution following the Chain-of-Thought (Wei
+et al. 2022, CoT) formulation. Note that while a task schema
+could be challenging and time-consuming to manually anno-
+tate for teachers using this platform, the step-by-step solution
+is easy to compose or can be scraped from the answer notes
+of textbook exercises or directly generated by GPT-4.
+Built on top of the task schema, we further devise Char-
+acter Schema , a symbolic representation showing a student
+character’s understanding and modeling plan on the given
+mathematics problem. As shown in Figure 2 (right), a charac-
+ter schema is a task schema injected with errors that could be
+made by real human students. We consider a wide range of
+errors including misunderstanding on a sub-task or even omit-
+ting the sub-task, as well as any variable mistakes resulting
+from miscounting, incorrect modeling, or calculation errors.
+In mathematics education, materials such as the lecture notes
+in the Mathematics Assessment Project (MAP) (MAP n.d.),
+often summarize common mistakes in each math problem,
+which can be directly used for simulating how students had
+incorrect solutions in the beginning. In MATHVC, the char-
+acter schema is synthesized by prompting an LLM to edita
+task schema based on the student’s characteristics as well as
+a set of possible mistakes. Throughout the conversation with
+other students, a character will gradually update its character
+schema to reflect its dynamic thought process, as we will
+introduce in Section 2.4.
+2.3 Meta Planning
+The main goal of the meta-planning module is to perform
+meta-level control of the entire conversation to encourage
+conversational procedural alignment. It consists of three com-
+ponents: (1) Task Schema Generator : As Section 2.2 men-
+tioned, the initial step of MATHVCis to generate the task
+schema, which can then be edited to form character schemas.
+We instruct the LLM to produce the task schema with the
+specified format shown in Figure 2. A rule-based text checker
+will be applied to verify if the generated schema follows the
+format; if not, we regenerate a new one. (2) Collaboration
+Stage Monitor : Prior work (PISA 2018) has observed that
+the collaborative problem-solving (CPS) process among stu-
+dents often consists of a sequence of stages, such as first
+
+Problem Description:
+Martha wants to set up a soup stall at a Farmer ’s Market…
+Decomposed Tasks:
+·       Task 1:
+o   Description: Calculate the percentage of each soup
+flavor preference based on the survey .
+o   Variables:
+§  total surveyed: 40
+§  tomato coriander vote: 15
+·       Task 2:...Character  Schema
+CharacteristicsProblem Description:
+Martha wants to set up a soup stall at a Farmer ’s Market…
+Decomposed Tasks:
+·       Task 1:
+o   Description: Calculate the percentage of each soup
+flavor preference based on the survey .
+o   Variables:
+§  total surveyed: 40
+§  tomato coriander vote: 16
+·       Task 2:...Task SchemaCommon Mistakes
+1. Students do not understand how to decompose the task;
+2. Students are careless in counting the survey cards;
+3. Students do not understand the concept of percentage;
+Name: Charlie      Gender: Male
+Career: 6 Grade Student in the US     MM Skill Level: BadFigure 2: Example task and character schema. The LLM edits the correct value 16 into 15 in the task schema to simulate the
+initial mistake made by the simulated student Charlie.
+establishing a shared task understanding and then establish-
+ing a team organization, as we summarize in Appendix A.
+To ensure that our simulated discussions closely resemble
+real CPS discussions, every dialogue will start from Stage 1,
+with the collaboration stage monitor dynamically determin-
+ing whether the current stage is completed and whether the
+discussion should proceed to the next stage. This decision is
+made based on the dialogue history as well as a definition
+of every stage. When all stages are completed, we end the
+session. We note that simulating this multi-stage process is
+also important for human students to engage in effective MM
+practices, as it enables more scaffolded human and charac-
+ter interaction. (3) Dialogue Speaker Control : To facilitate
+smoother conversation interactions, we have developed a dia-
+logue speaker control module that predicts the next speaker
+based on the dialogue context. For instance, if the last re-
+sponse is “ Hey Bob, you made a mistake... ”, the next speaker
+is likely Bob. The LLM captures this intuition by learning
+from the dialogue history, and it is prompted to output a
+single character name as the next speaker.
+Human-System Interaction Design Our current system
+interacts with the user through the dynamic control with the
+Dialogue Speaker Control module. If the next speaker can-
+didates include only the user, the system will wait indefinitely
+for the human student’s response. If the next speaker candi-
+dates include both agents and the user, the system will wait
+for 10 seconds; if the student does not input any characters
+during this time, it will be considered the agent’s turn, and the
+corresponding agent’s response will be output. If the student
+provides input, the conversation will proceed based on the
+student’s input. If the next speaker candidates include only
+agents, the system will directly output the agent’s response.
+2.4 Character Simulation
+Each character is simulated with four specified traits: name,
+gender, career (e.g., grade level in our application), and MM
+skill level (i.e., good or bad1). We included the first two traits
+1In this work, we define a student’s MM skill in a coarse way.
+Future work could enhance it to be more fine-grained based on the
+practices in mathematics education.mainly for characters to address each other (via names or
+pronouns) and the last two for configuring each character’s
+MM background.
+Our simulation functions with four components (Figure 3,
+bottom). The first two components are responsible for gener-
+ating and maintaining the character schema. (1) Character
+Schema Generator : As we introduced in Section 2.2, every
+simulated student character has its own character schema to
+reflect their thought. In our simulation, a character schema
+generator decides the specific mistake(s) a student character
+will make based on their traits and then edits the task schema
+into their initial character schema (Figure 2). To facilitate this
+editing, we represent the task schema as a Python dictionary
+and express every edit as a line of Python code that specifies
+the replacement of a variable or a sub-task description. (2)
+Character Schema Modifier : During real-life student dis-
+cussions, a human student’s thought for a given question often
+evolves as the conversation progresses. We simulate these
+dynamics by continuously modifying the character schema
+based on the dialogue history. We prompt the LLM to de-
+cide whether the current schema needs to be modified. When
+it does, the modification will be achieved by generating a
+Python code that edits the previous character schema, similar
+to the initial character schema generation.
+Generating character responses is not a trivial task in our
+application. A major challenge we observed is their lack of
+diversity . For example, when we directly prompted LLMs
+to generate responses simulating how students discuss their
+modeling plans (i.e., Stage 3), all responses were uniformly
+assertive statements of a plan, without other forms of com-
+munication that are also commonly seen in authentic student
+discussions (e.g., question-answering). To address the issue,
+we propose a two-step response generation with the following
+two components. (3) Dialogue Act Generator : Before the
+response generation, we first prompt the LLM character to
+pick a “dialogue act” indicating the intent of their response.
+Dialogue acts are widely used in traditional dialogue sys-
+tems (Stolcke et al. 2000; Li et al. 2016; Zhao, Zhao, and
+Eskenazi 2017). In our application, we define a set of dia-
+logue acts for each conversational stage, such as “present a
+task understanding” and “ask for a clarifying question about
+
+Collaboration Stage
+Monito rDialogue Speaker
+ControlDialogue Meta Planner
+Task Schema
+Generator
+Character Schema
+GeneratorDialogue Act
+GeneratorResponse
+GeneratorCharacter Schema
+ModifierCharacter
+Traits
+(pre-config)Virtual Classr oom Meta Planning 
+Virtual Character  Simulation Math Problem
+& Solution
+(pre-config)
+Instantiated
+Task
+Schema
+Selected
+Dialogue ActSimulated Character Response
+Dialogue Act
+Candidates
+Character SchemaDialogue History
+Human Response
+Stage 1: Establish a shared task understanding
+Stage 2: Establish team or ganization
+Stage 3: Plan actions for problem-solving
+Stage 4: Execute actions for problem-solving
+Stage 5: Validating the answer
+Acts for Stage 1: Present a task understanding, Ask for a clarifying
+question about the a task understanding, etc.
+Acts for Stage 2: Volunteer to serve a role, ...
+Acts for Stage 3: State an action, Second an action plan, ...
+Acts for Stage 4: Execute an action plan and state the result, ...
+Acts for Stage 5: Summarize the results, Reflect on the implication Human
+StudentFigure 3: Architecture of MATHVCfor simulating student characters and multi-character conversations in collaborative MM
+problem-solving.
+a task understanding” for Stage 1, as shown in Figure 3; the
+complete definitions can be found in Appendix A. A dialogue
+act generator is then tasked to generate a dialogue act (e.g.,
+“ask Bob a clarifying question about... ” ) based on the character
+schema, the dialogue history, and the set of dialogue acts for
+the current stage. We found that the use of dialogue acts could
+dramatically increase the response diversity when an LLM
+is explicitly prompted to reason about the proper response
+(e.g., asking a clarifying question when the character has a
+different modeling plan than their teammates, or generating a
+narrative answer when a character is asked for clarification).
+(4)Character Response Generator: Once deciding the dia-
+logue act, a character response can be generated conditionally.
+However, even when the character schema is provided in the
+prompt, we still observe inconsistency between the character
+schema and the generated response (e.g., characters referring
+to inconsistent variable values than those in their schemas).
+To make the response follow the character schema better,
+instead of directly generating, we prompt an LLM to first
+retrieve relevant variables from the character schema, and
+then generate a response conditionally on the variables and
+their values. In practice, we found this prompt design to be
+very effective. Additionally, in the prompt, we instruct the
+LLM to mimic the language style of middle-school students
+(e.g., keeping the response short and colloquial). We present
+the prompts for the dialogue act generator and the response
+generator in Appendix I.
+3 System Evaluation
+We conducted experiments using middle-school mathe-
+matics problems from the MAP project (MAP n.d.) and
+GSM8k (Cobbe et al. 2021). Questions from the MAP in-
+clude both answers and common student mistakes, while
+those from the GSM8k only have answers; therefore, we
+manually annotate mistakes for them. Due to the cost of man-
+ual evaluation, we sample a set of questions. We used GPT-4o
+(version “gpt-4o-2024-05-13”) as the backbone LLM.
+While we aim for a human subject study with real-lifemiddle-school students to test our system, at the current
+stage, our primary goal is to showcase the feasibility of a
+virtual classroom. Therefore, our current evaluation focuses
+on whether the multiple (3 in our experiments) simulated
+LLM characters can reasonably collaborate on solving MM
+tasks during the evaluation. The evaluation is conducted by
+sampling multiple simulated dialogues among the simulated
+students and manually assessing their quality. In our experi-
+ment, 10 examples are tested. For each question on the test
+set, we consider two student character configurations with
+varying MM skill combinations.
+3.1 Experimental Setup
+Baseline Systems We compare MATHVCwith four base-
+lines. (1) Vanilla Simulation follows the prior work (Park
+et al. 2023) in prompt engineering the profile instruction to
+an LLM. Specifically, we directly present the LLM the math
+question, the student characteristics, and the dialogue history,
+and then instruct the LLM to generate responses as a middle-
+school student. (2) Domain-Specified Simulation further
+augments the vanilla simulation with domain-specific knowl-
+edge in its prompt, including the stages and possible acts in
+each stage, common student mistakes, the language style of
+a middle-school student, and so on. To demonstrate the effec-
+tiveness of our character schema and the meta planner, we
+include two more variants on top of domain-specified simula-
+tion, i.e., (2.1) w/ only character schema , where we include
+our proposed character schema in the prompt to the LLM
+and allow for continual schema modification, and (2.2) w/
+only meta planner , where we augment the domain-specified
+simulation with our meta planner. The planned stage is added
+to the prompt for character response generation.
+Evaluation Metrics The human evaluation was conducted
+by two student annotators. Each of the two annotators la-
+beled all the conversations. The annotators were instructed
+to rate each sampled dialogue on the degrees of character-
+istic alignment and conversational procedural alignment it
+
+System Characteristic Alignment Conversational Procedural Alignment
+Vanilla Simulation 2.85 2.88
+Domain-Specified Simulation 3.30 3.15
+w/ only character schema 3.50 3.20
+w/ only meta planner 3.00 3.10
+MATHVC 3.73 3.53
+Table 1: Human evaluation results comparing various simulations (1: worst; 4: best).
+reflected (1: worst; 4: best). We report an average score. Al-
+though the students probably have little experience with math
+discussions look like, we provided the annotators with de-
+tailed notes. We believe that genuine conversations should
+meet at least the two “alignment” goals we defined, i.e., con-
+sistency with each character’s properties and thoughts on
+the math problem (“characteristics alignment”) and showing
+smooth multiple-stage transition in the overall conversation
+(“conversational procedural alignment”). Therefore, we have
+provided detailed explanations only for these two points. The
+annotator has also scored based solely on these two aspects,
+and our paper reports only these two metrics. Other factors
+that may contribute to a conversation being realistic for a
+middle school student, such as tone, were not considered
+during annotation. The annotation guidelines are presented
+in Appendix G.
+3.2 Evaluation Results
+The human evaluation results are shown in the Table 1. We
+make the following observations:
+Incorporating domain knowledge improves the simu-
+lation quality. All systems built with domain knowledge
+outperform the vanilla simulation. In our inspection, we
+observed that the vanilla simulation cannot simulate fine-
+grained student behaviors; for example, it rarely exhibits
+modeling mistakes even when simulating students with bad
+MM skills and often starts the discussion unnaturally with
+solution statements. By introducing knowledge of common
+mistakes and stage information to its prompt, these issues
+are mitigated in domain-specified simulation, leading to im-
+proved alignment on both characteristics and conversational
+procedures.
+Including character schema enhances characteristic
+alignment, but including meta planner enhances align-
+ment only when used with character schema. Incorpo-
+rating solely character schema could improve the charac-
+teristic alignment and result in comparable conversational
+procedures. Surprisingly, we observe that simply adding the
+meta planner may even degrade the dialogue quality. We
+found that when adding the natural-language stage informa-
+tion (e.g., “ execute actions for problem-solving ”) explicitly
+to the prompt of domain-specified simulation, the LLM was
+biased to respond with a direct solution (e.g., presenting the
+execution results). This not only broke the characteristics
+but also resulted in unnaturally shorter conversations. The
+observation, on the other hand, confirms the necessity of the
+dialogue act generator of MATHVC, which avoids this issue
+by inferring the likely dialogue acts in each stage and feeding
+the dialogue acts rather than the explicit stage information
+for response generation.MATHVCoffers the most aligned simulation by harmo-
+niously integrating character schema with meta planner.
+Our system obtained the highest scores on both alignment
+aspects, demonstrating the effectiveness of integrating the
+symbolic schema representations with meta-planning under
+our framework. We qualitatively compare MATHVCwith
+other approaches in Figure 4. In the vanilla simulation, the
+discussion bypasses many discussion stages (e.g., establish-
+ing the team organization), and Alice, who is bad at mathe-
+matics, does not make any mistakes. The domain-specified
+simulation made some improvements, such as simulating re-
+sponses that are shorter and can simulate how students estab-
+lish shared task understanding before planning on problem-
+solving, although it is still unable to simulate a fully extended,
+multi-stage conversation (e.g., team organization is still miss-
+ing). In MATHVC, the conversation successfully goes over
+all stages. It also simulates how Alice makes a calculation
+mistake initially, which is then corrected by Charlie. Like a
+real student, Alice then adjusts her modeling plan based on
+Charlie’s explanation. This case study demonstrates the su-
+periority of our system in both the characteristics alignment
+and the conversational procedural alignment.
+3.3 Further Analysis and Discussion
+Ablation Studies Evaluating Key Prompt Designs in
+MATHVC We further conducted ablation studies to vali-
+date the key prompt designs in MATHVC, hoping to share
+insights with future research that will simulate characters at
+the same complexity level. Our investigation reveals that (1)
+editing is superior to regenerating in the character schema
+modifier; (2) generating acts is preferable to solely selecting
+acts in the dialogue act generator; and (3) two-step generation
+is more effective than the direct generation in the response
+generator. The results and analysis are in Appendix D.
+Error Analysis Through analyzing the sampled dialogues,
+we identify two key issues of MATHVCthat can be addressed
+in the future. First, we observed that the LLM-simulated
+students sometimes cannot elaborate on their deliberation
+process. Rather, they tend to directly offer an opinion, which
+makes the conversation less engaging. Second, instructibility
+remains a major challenge in the character simulation. For
+example, even when a character has been simulated to take
+charge of a certain sub-task during the team organization, the
+LLM may still generate a response mistakenly representing
+the character’s actions in solving a different sub-task. We
+conjecture that this discrepancy is sourced from the LLM’s
+attention to dominantly the local context (e.g., the current
+sub-task focus), while instructions indicated in the relatively
+distance context are overlooked (e.g., Alice’s sub-task assign-
+ment at the beginning of the discussion). Future work could
+
+address these issues by designing an appropriate schema to
+encourage responses with details and dynamically store and
+retrieve information in both long- and short-term character
+memory.
+Preliminary Results with Humans in the Loop While we
+are not able to recruit middle-school students in our current
+research, we conducted a preliminary study showing the po-
+tential for real humans to engage in collaborative MM tasks
+with LLM characters. An example dialogue conducted by one
+author is shown in Appendix E. We found that the interaction
+between the human and the simulated student characters is
+natural and effective. It showcases the promise for future
+deployment with real middle-school students.
+Simulation with Varying Character Names, Genders, and
+Careers Our main evaluation has focused on the simula-
+tion of students at different MM skill levels, given that it is
+the most essential demand for MATHVC. To further under-
+stand the impact of other traits, we present sampled dialogues
+with different character names (other than the “placeholders”
+Alice, Bob, and Charlie), genders (e.g., when all characters
+are females), and careers (e.g., when characters come from
+different grade levels or countries). Our ablation analysis as
+described in Appendix F shows that these characteristics have
+only a minor impact on the response, and we did not observe
+any ethical concerns (e.g., biases) in our examination. We
+include further discussions in the Ethics Statement.
+4 Related Work
+4.1 LLMs in Mathematics Education
+Leveraging the mathematical reasoning ability of LLMs, nu-
+merous studies have explored how to enhance mathematics
+education with LLMs. (McNichols et al. 2024) utilize LLMs
+to generate multiple-choice mathematical questions. (Lev-
+onian et al. 2023) investigate how to select math problems
+to assist math tutoring. (Bulusu et al. 2023) integrate LLMs
+and a math graphing tool to plot math figures by language.
+(Macina et al. 2023) propose a framework for human teachers
+to interact with LLMs to collect data for math tutoring and
+the resulting data can be used to fine-tune smaller tutoring
+models. Most relevant to us are the works of (Markel et al.
+2023) and (Lee et al. 2023), which construct platforms with
+LLM-simulated students for teaching assistants and teach-
+ers training. However, existing work has only focused on
+the vanilla simulation with humans-agents interaction, while
+we look into an innovative yet challenging setting of simu-
+lating multiple students in a collaborative problem-solving
+scenario with both human-agent and agent-agent interaction
+and carefully design the system to emulate authentic students.
+Our work will thus offer unique insights into the applica-
+tions of LLMs to complicated multi-agent settings both in
+mathematics education and beyond.
+4.2 LLM Character Research
+There is a growing number of work employing LLMs to con-
+struct autonomous agents for playing specific roles (Wang
+et al. 2023b; Park et al. 2023), such as programmers (Qian
+et al. 2023; Hong et al. 2023). Some studies have foundthe characteristic alignment of LLMs is sometimes unsatis-
+factory (Fischer 2023; Wang, Morgenstern, and Dickerson
+2024). Approaches to improving the characteristic alignment
+are mainly in two categories: fine-tuning LLMs (Shao et al.
+2023; Zhou et al. 2023; Liu et al. 2023; Yu et al. 2024), which
+requires high-quality data, and carefully designing specific
+prompts and architectures (Yu et al. 2022; Li et al. 2023;
+Tang et al. 2024; Hua et al. 2024). Given the challenge of
+gathering realistic data from middle-school students due to
+privacy concerns, we opted for the second line of approach.
+In particular, we propose a novel idea of leveraging symbolic
+representations to enhance characteristics alignment, and we
+explore an innovative application of simulating less knowl-
+edgeable populations (e.g., students with bad math skills) for
+mathematics education.
+5 Conclusion and Discussion
+We present MATHVC, a novel LLM-powered platform sim-
+ulating middle-school students collaborating in mathemat-
+ics problem-solving. To this end, we proposed the use of
+symbolic schema and meta planner to encourage simulation
+alignment. While LLM-based character simulations have
+been studied in prior work, the two alignment problems, i.e.,
+characteristic alignment and conversational procedural align-
+ment, have not been carefully discussed. Our experimental
+results demonstrated the effectiveness of our simulation and
+the promise for MATHVCto be deployed to enhance math-
+ematics education in the future. We believe our work will
+showcase the effective use of Generative AI for education and
+will inspire future research on the applications of multi-LLM
+agents to critical domains.
+Like most existing LLM agents, MATHVCfaces the issues
+of token costs and latency, when it has to query an LLM mul-
+tiple times for each character’s response generation. On the
+other hand, the pipeline design of MATHVC’s architecture
+could lead to error accumulation. However, overall MATHVC
+still demonstrated a huge potential to be deployed to serve
+real students and be used as a tool for mathematics educa-
+tion. In the future, one important extension is to allow for
+“personalization” of MATHVC, such as simulating student
+characters based on the specific human student’s need (e.g.,
+setting up each character’s dialogue act frequency depending
+on what kinds of dialogue interaction can better scaffold the
+student’s problem modeling and solving).
+Finally, we clarify that the close-to-4 score of MATHVCin
+Table 1 by no means implies a perfect performance with our
+system, and we believe that more effort is still required for the
+system to benefit student communities in practice. More sys-
+tematic evaluation of both the system and the human student
+(e.g., whether they exhibit enhanced MM skills after inter-
+acting with MATHVC) should be conducted in collaboration
+with experts from Mathematics Education.
+6 Acknowledgement
+The project is supported by Microsoft Research, NSF
+(#2418580, #2418582), and the Office of Research Com-
+puting at GMU.
+
+References
+Ahn, J.; Verma, R.; Lou, R.; Liu, D.; Zhang, R.; and Yin, W.
+2024. Large Language Models for Mathematical Reasoning:
+Progresses and Challenges. arXiv:2402.00157.
+Bulusu, A.; Man, B.; Jagmohan, A.; Vempaty, A.; and Mari-
+Wyka, J. 2023. An Automated Graphing System for Mathe-
+matical Pedagogy. In NeurIPS’23 Workshop on Generative
+AI for Education (GAIED) .
+Cheng, J.; and Chin, P. 2024. SocioDojo: Building Lifelong
+Analytical Agents with Real-world Text and Time Series. In
+The Twelfth International Conference on Learning Represen-
+tations .
+Cobbe, K.; Kosaraju, V .; Bavarian, M.; Chen, M.; Jun, H.;
+Kaiser, L.; Plappert, M.; Tworek, J.; Hilton, J.; Nakano, R.;
+Hesse, C.; and Schulman, J. 2021. Training Verifiers to Solve
+Math Word Problems. arXiv preprint arXiv:2110.14168 .
+Denny, P.; Gulwani, S.; Heffernan, N. T.; K ¨aser, T.; Moore,
+S.; Rafferty, A. N.; and Singla, A. 2024. Generative AI for Ed-
+ucation (GAIED): Advances, Opportunities, and Challenges.
+Fischer, K. A. 2023. Reflective Linguistic Programming
+(RLP): A Stepping Stone in Socially-Aware AGI (SocialAGI).
+arXiv:2305.12647.
+Garfunkel, S.; and Montgomery, M. 2019.
+GAIMME—Guidelines for Assessment & Instruction
+in Mathematical Modeling Education . SIAM.
+Hong, S.; Zhuge, M.; Chen, J.; Zheng, X.; Cheng, Y .; Zhang,
+C.; Wang, J.; Wang, Z.; Yau, S. K. S.; Lin, Z.; Zhou, L.; Ran,
+C.; Xiao, L.; Wu, C.; and Schmidhuber, J. 2023. MetaGPT:
+Meta Programming for A Multi-Agent Collaborative Frame-
+work. arXiv:2308.00352.
+Hua, W.; Fan, L.; Li, L.; Mei, K.; Ji, J.; Ge, Y .; Hemphill,
+L.; and Zhang, Y . 2024. War and Peace (WarAgent): Large
+Language Model-based Multi-Agent Simulation of World
+Wars. arXiv:2311.17227.
+Lee, U.; Lee, S.; Koh, J.; Jeong, Y .; Jung, H.; Byun, G.; Moon,
+J.; Lim, J.; and HyeoncheolKim. 2023. Generative Agent for
+Teacher Training: Designing Educational Problem-Solving
+Simulations with Large Language Model-based Agents for
+Pre-Service Teachers.
+Levonian, Z.; Li, C.; Zhu, W.; Gade, A.; Henkel, O.; Postle,
+M.-E.; and Xing, W. 2023. Retrieval-augmented Generation
+to Improve Math Question-Answering: Trade-offs Between
+Groundedness and Human Preference. arXiv:2310.03184.
+Li, C.; Wang, J.; Zhang, Y .; Zhu, K.; Hou, W.; Lian, J.; Luo,
+F.; Yang, Q.; and Xie, X. 2023. Large Language Models
+Understand and Can be Enhanced by Emotional Stimuli.
+arXiv:2307.11760.
+Li, X.; Lipton, Z. C.; Dhingra, B.; Li, L.; Gao, J.; and Chen,
+Y .-N. 2016. A user simulator for task-completion dialogues.
+arXiv preprint arXiv:1612.05688 .
+Li, Y .; Zhang, Y .; and Sun, L. 2023. MetaAgents: Simulat-
+ing Interactions of Human Behaviors for LLM-based Task-
+oriented Coordination via Collaborative Generative Agents.
+arXiv:2310.06500.Liu, R.; Yang, R.; Jia, C.; Zhang, G.; Zhou, D.; Dai,
+A. M.; Yang, D.; and V osoughi, S. 2023. Training Socially
+Aligned Language Models in Simulated Human Society.
+arXiv:2305.16960.
+Lou, Y . 2013. Within class grouping: Arguments, practices,
+and research evidence. In International guide to student
+achievement , 167–169. Routledge.
+Lu, P.; Qiu, L.; Yu, W.; Welleck, S.; and Chang, K.-W. 2023.
+A Survey of Deep Learning for Mathematical Reasoning. In
+Rogers, A.; Boyd-Graber, J.; and Okazaki, N., eds., Proceed-
+ings of the 61st Annual Meeting of the Association for Compu-
+tational Linguistics (Volume 1: Long Papers) , 14605–14631.
+Toronto, Canada: Association for Computational Linguistics.
+Macina, J.; Daheim, N.; Chowdhury, S.; Sinha, T.; Kapur, M.;
+Gurevych, I.; and Sachan, M. 2023. MathDial: A Dialogue
+Tutoring Dataset with Rich Pedagogical Properties Grounded
+in Math Reasoning Problems. In Bouamor, H.; Pino, J.; and
+Bali, K., eds., Findings of the Association for Computational
+Linguistics: EMNLP 2023 , 5602–5621. Singapore: Associa-
+tion for Computational Linguistics.
+MAP. n.d. Mathematics Assessment Project. Accessed March
+2024. https://www.map.mathshell.org/.
+Markel, J. M.; Opferman, S. G.; Landay, J. A.; and Piech,
+C. 2023. GPTeach: Interactive TA Training with GPT-based
+Students. Proceedings of the Tenth ACM Conference on
+Learning @ Scale .
+McNichols, H.; Feng, W.; Lee, J.; Scarlatos, A.; Smith, D.;
+Woodhead, S.; and Lan, A. 2024. Automated Distractor and
+Feedback Generation for Math Multiple-choice Questions
+via In-context Learning. arXiv:2308.03234.
+OpenAI; Achiam, J.; Adler, S.; Agarwal, S.; Ahmad, L.;
+Akkaya, I.; Aleman, F. L.; Almeida, D.; Altenschmidt, J.;
+Altman, S.; Anadkat, S.; Avila, R.; Babuschkin, I.; Balaji,
+S.; Balcom, V .; and et.al. 2024. GPT-4 Technical Report.
+arXiv:2303.08774.
+Ouyang, L.; Wu, J.; Jiang, X.; Almeida, D.; Wainwright, C.;
+Mishkin, P.; Zhang, C.; Agarwal, S.; Slama, K.; Ray, A.; et al.
+2022. Training language models to follow instructions with
+human feedback. Advances in neural information processing
+systems , 35: 27730–27744.
+Park, J. S.; O’Brien, J. C.; Cai, C. J.; Morris, M. R.; Liang,
+P.; and Bernstein, M. S. 2023. Generative Agents: Interac-
+tive Simulacra of Human Behavior. In In the 36th Annual
+ACM Symposium on User Interface Software and Technology
+(UIST ’23) , UIST ’23. New York, NY , USA: Association for
+Computing Machinery.
+PISA, O. 2018. assessment and analytical framework. 2019.
+Qian, C.; Cong, X.; Liu, W.; Yang, C.; Chen, W.; Su,
+Y .; Dang, Y .; Li, J.; Xu, J.; Li, D.; Liu, Z.; and Sun, M.
+2023. Communicative Agents for Software Development.
+arXiv:2307.07924.
+Rajaram, K.; and Rajaram, K. 2021. Learning interventions:
+collaborative learning, critical thinking and assessing par-
+ticipation real-time. Evidence-Based Teaching for the 21st
+Century Classroom and Beyond: Innovation-Driven Learning
+Strategies , 77–120.
+
+Shao, Y .; Li, L.; Dai, J.; and Qiu, X. 2023. Character-LLM:
+A Trainable Agent for Role-Playing. arXiv:2310.10158.
+Standards, C. C. S. 2010. Common core state standards
+for mathematics, National Governors Association Center for
+Best Practices and the Council of Chief State School Officers.
+Washington, DC .
+Stolcke, A.; Ries, K.; Coccaro, N.; Shriberg, E.; Bates, R.;
+Jurafsky, D.; Taylor, P.; Martin, R.; Ess-Dykema, C. V .; and
+Meteer, M. 2000. Dialogue act modeling for automatic tag-
+ging and recognition of conversational speech. Computa-
+tional linguistics , 26(3): 339–373.
+Tang, Y .; Ou, J.; Liu, C.; Zhang, F.; Zhang, D.; and Gai, K.
+2024. Enhancing Role-playing Systems through Aggressive
+Queries: Evaluation and Improvement. arXiv:2402.10618.
+TNTP. 2018. The Opportunity Myth: What Students Can
+Show Us About How School Is Letting Them Down—And
+How to Fix It .
+Vygotsky, L. S.; and Cole, M. 1978. Mind in society: Devel-
+opment of higher psychological processes . Harvard university
+press.
+Wang, A.; Morgenstern, J.; and Dickerson, J. P. 2024. Large
+language models cannot replace human participants because
+they cannot portray identity groups. arXiv:2402.01908.
+Wang, G.; Xie, Y .; Jiang, Y .; Mandlekar, A.; Xiao, C.; Zhu,
+Y .; Fan, L.; and Anandkumar, A. 2023a. V oyager: An Open-
+Ended Embodied Agent with Large Language Models. arXiv
+preprint arXiv: Arxiv-2305.16291 .
+Wang, L.; Ma, C.; Feng, X.; Zhang, Z.; Yang, H.; Zhang, J.;
+Chen, Z.; Tang, J.; Chen, X.; Lin, Y .; et al. 2023b. A survey
+on large language model based autonomous agents. arXiv
+preprint arXiv:2308.11432 .
+Wang, Z.; Chiu, Y . Y .; and Chiu, Y . C. 2023. Humanoid
+Agents: Platform for Simulating Human-like Generative
+Agents. In Feng, Y .; and Lefever, E., eds., Proceedings of the
+2023 Conference on Empirical Methods in Natural Language
+Processing: System Demonstrations , 167–176. Singapore:
+Association for Computational Linguistics.
+Wei, J.; Wang, X.; Schuurmans, D.; Bosma, M.; Xia, F.; Chi,
+E.; Le, Q. V .; Zhou, D.; et al. 2022. Chain-of-thought prompt-
+ing elicits reasoning in large language models. Advances in
+neural information processing systems , 35: 24824–24837.
+Wikipedia. n.d. Alice and Bob. Accessed March 2024. https:
+//en.wikipedia.org/wiki/Alice andBob.
+Xu, B.; Liu, X.; Shen, H.; Han, Z.; Li, Y .; Yue, M.; Peng, Z.;
+Liu, Y .; Yao, Z.; and Xu, D. 2023. Gentopia.AI: A Collab-
+orative Platform for Tool-Augmented LLMs. In Feng, Y .;
+and Lefever, E., eds., Proceedings of the 2023 Conference
+on Empirical Methods in Natural Language Processing: Sys-
+tem Demonstrations , 237–245. Singapore: Association for
+Computational Linguistics.
+Yu, J.; Zhang, X.; Xu, Y .; Lei, X.; Guan, X.; Zhang, J.; Hou,
+L.; Li, J.; and Tang, J. 2022. XDAI: A Tuning-Free Frame-
+work for Exploiting Pre-Trained Language Models in Knowl-
+edge Grounded Dialogue Generation. In Proceedings of
+the 28th ACM SIGKDD Conference on Knowledge Discov-
+ery and Data Mining , KDD ’22, 4422–4432. New York,NY , USA: Association for Computing Machinery. ISBN
+9781450393850.
+Yu, X.; Luo, T.; Wei, Y .; Lei, F.; Huang, Y .; Peng, H.; and Zhu,
+L. 2024. Neeko: Leveraging Dynamic LoRA for Efficient
+Multi-Character Role-Playing Agent. arXiv:2402.13717.
+Zhao, T.; Zhao, R.; and Eskenazi, M. 2017. Learning
+Discourse-level Diversity for Neural Dialog Models using
+Conditional Variational Autoencoders. In Proceedings of the
+55th Annual Meeting of the Association for Computational
+Linguistics (Volume 1: Long Papers) , 654–664.
+Zhou, J.; Chen, Z.; Wan, D.; Wen, B.; Song, Y .; Yu, J.; Huang,
+Y .; Peng, L.; Yang, J.; Xiao, X.; et al. 2023. CharacterGLM:
+Customizing Chinese Conversational AI Characters with
+Large Language Models. arXiv preprint arXiv:2311.16832 .
+A Mathematical Modeling Discussion Stages
+and Dialogue Acts
+We list the MM discussion stages and dialogue acts in the
+Table 2. “Plan(ning) actions” in the table refers to planning
+on the modeling of certain variables. “Execut(ing) actions”
+refers to executing the planned variable calculation and ob-
+taining the result.
+
+Stage Dialogue Act Candidates
+Establish and maintain shared understandingPresent a task understanding
+Ask a clarifying question about task understanding
+Answer a clarifying question about task understanding
+Second a task understanding
+Ask for agreement on a task understanding
+Establish team organizationInitiate the workload division
+V olunteer to serve a role
+Second role designation plan
+Ask for agreement on the role designation
+Plan actions for problem-solvingPrompt a teammate to join the discussion
+State an action plan
+Ask a clarifying question about an action plan
+Answer a clarifying question about an action plan
+Second an action plan
+Ask for agreement on an action plan
+Execute actions for problem-solvingExecute an action plan and state the execution result
+Ask a clarifying question about an execution result
+Answer a clarifying question about an execution result
+Second an execution result
+Ask for agreement on an execution result
+Validating the answerReflection on the implication of modeling outcomes
+Summarize the results
+Table 2: Stages and Dialogue Acts
+B Example and Prompt for Character
+Schema Generation
+Here is an example of character schema generation:
+Question : Martha wants to set up a soup stall at a Farmer’s
+Market. She hopes to sell 500 mugs of soup, each with a
+white or brown bread roll. She will sell a mug of soup with a
+bread roll for $1.25. Martha knows that She can buy the soup
+in 2.5-liter bottles. Each bottle of soup costs $5 and provides
+ten servings. Bread rolls are sold in packs of 10. Each pack
+costs $2. The mugs will not cost her anything, as she can
+borrow them from a friend. Martha surveys 40 people to find
+out what flavor of soup they would be most likely to buy
+and what kind of bread roll they would prefer. The survey
+responses show that Among the 40 people, 6 voted for soup
+of carrot and coriander, 16 for tomato, 10 for leek and potato,
+and 8 for chicken and vegetable. Among the same 40 people,
+30 voted for white bread rolls, and 10 voted for brown bread
+rolls. What exactly should Martha buy so that she can make
+the most profit and not have lots of soup and rolls left over at
+the end?
+Characteristics :
+• Name: Alice
+• Gender: Female
+• Career: 6-grade student in the US
+• MM skill level: Bad
+Common mistakes :
+1.The student suggests that Martha should buy 12.5 bottles
+of leek potato soup, and forget to round up.
+2.The student assumes that Martha will buy equal quantities
+of each kind of soup.3.The student’s solution contains incorrect calculations,
+such as calculating 40% of 500 is 125.25.
+Task Schema in Python (generated by GPT-4)
+1{
+2"task 1": {
+3 "description": "Calculate the
+percentage of each soup flavor
+preference based on the survey.",
+4 "variables": {
+5 "total_surveyed": 40,
+6 "carrot_coriander_votes": 6,
+7 "tomato_votes": 16,
+8 "leek_potato_votes": 10,
+9 "chicken_vegetable_votes": 8,
+10 "carrot_coriander_percentage": 15,
+# 6/40 *100
+11 "tomato_percentage": 40, # 16/40
+*100
+12 "leek_potato_percentage": 25, #
+10/40 *100
+13 "chicken_vegetable_percentage": 20
+# 8/40 *100
+14 }
+15 },
+16 "task 2": {
+17 "description": "Calculate the
+percentage of each bread roll
+preference based on the survey.",
+18 "variables": {
+19 "white_bread_votes": 30,
+20 "brown_bread_votes": 10,
+21 "white_bread_percentage": 75, #
+30/40 *100
+22 "brown_bread_percentage": 25 #
+10/40 *100
+
+23 }
+24 },
+25 "task 3": {
+26 "description": "Calculate the number
+of servings needed for each soup
+flavor to cater to 500 customers.",
+27 "variables": {
+28 "total_customers": 500,
+29 "servings_carrot_coriander": 75,
+# 500 *15%
+30 "servings_tomato": 200, # 500 *
+40%
+31 "servings_leek_potato": 125, #
+500 *25%
+32 "servings_chicken_vegetable": 100
+# 500 *20%
+33 }
+34 },
+35 "task 4": {
+36 "description": "Calculate the number
+of bottles needed for each soup
+flavor.",
+37 "variables": {
+38 "servings_per_bottle": 10,
+39 "bottles_carrot_coriander": 8, #
+ceil(75 / 10)
+40 "bottles_tomato": 20, # 200 / 10
+41 "bottles_leek_potato": 13, # ceil
+(125 / 10)
+42 "bottles_chicken_vegetable": 10 #
+100 / 10
+43 }
+44 },
+45 "task 5": {
+46 "description": "Calculate the number
+of packs of bread rolls needed for
+each type.",
+47 "variables": {
+48 "rolls_per_pack": 10,
+49 "packs_white_bread": 38, # ceil
+(375 / 10)
+50 "packs_brown_bread": 13 # ceil
+(125 / 10)
+51 }
+52 },
+53 "task 6": {
+54 "description": "Calculate the total
+cost of soup and bread rolls.",
+55 "variables": {
+56 "cost_per_bottle_soup": 5,
+57 "cost_per_pack_bread": 2,
+58 "total_cost_soup": 255, # (8 + 20
++ 13 + 10) *5
+59 "total_cost_bread": 102, # (38 +
+13) *2
+60 "total_cost": 357 # 255 + 102
+61 }
+62 },
+63 "task 7": {
+64 "description": "Calculate the total
+revenue from selling 500 mugs of soup
+with bread rolls.",
+65 "variables": {
+66 "price_per_mug_with_roll": 1.25,
+67 "total_revenue": 625 # 500 *1.2568 }
+69 },
+70 "task 8": {
+71 "description": "Calculate the profit
+Martha will make.",
+72 "variables": {
+73 "total_revenue": 625,
+74 "total_cost": 357,
+75 "profit": 268 # 625 - 357
+76 }
+77 }
+78}
+Listing 1: An example task schema represented in Python
+Example of Variables to Edit for Character Schema
+Modification (generated by GPT-4) :
+1{
+2"bottles_leek_potato": 12.5,
+3"total_cost_soup": 252.5,
+4"total_cost": 354.5,
+5"profit": 270.5
+6}
+Listing 2: An example output of the Character Schema
+Modifier which indicates variables to edit in Python
+We will then apply these variable edits to the task schema to
+initialize the character schema.
+Prompt for Character Schema Modifier :
+1Question: Martha wants to set up a soup
+stall...
+2task schema: {
+3"task 1": {
+4 ...
+5}
+6The error student will make:
+71. The student suggests that Martha
+should buy 12.5 bottles of leek
+potato soup, and forget to round up.
+82. The student assumes that Martha will
+buy equal quantities of each kind of
+soup.
+93. The student’s solution contains
+incorrect calculations, such as
+calculating 0.4 of 500 is 125.25.
+10Character:
+11Name: Alice
+12Gender: Female
+13Career: 6 Grade Student in the US
+14Skill at Math: Bad
+15Will Alice make a mistake in solving
+math questions based on his/her
+characteristics?
+16If the answer is no, reply no.
+17If the answer is yes, please select one
+or multiple mistakes from above.
+Based on the error a student would
+make, variables need to be edited in
+the thoughts schema. Generate a
+Python dict without any comment(with
+"#") to indicate which variables
+should be edited, the format is:
+18‘‘‘python
+19{var1_name: incorrect_var1_value,
+var2_name: incorrect_var2_value,...}
+
+20‘‘‘
+Listing 3: Prompt for character schema modification
+C Details of Experimental Setup
+The GPT-4 we used was GPT-4-turbo version “11-06-
+preview”. The temperature is set to 0.7, top p to 1, repe-
+tition penalty to 1 and max tokens to 1024. The student char-
+acter implementation is based on a lightweight open-source
+platform Gentopia (Xu et al. 2023), on top of which we fur-
+ther developed the proposed meta planner to form MATHVC.
+In our simulation, we have two different setups of simulated
+characters:
+• Characteristics Setup I:
+–Name: Alice; Gender: Female; Career: 6 Grade student
+in the US; MM skill level: Bad
+–Name: Bob; Gender: Male; Career: 6 Grade student in
+the US; MM skill level: Good
+–Name: Charlie; Gender: Male; Career: 6 Grade student
+in the US; MM skill level: Good
+• Characteristics Setup II:
+–Name: Alice; Gender: Female; Career: 6 Grade student
+in the US; MM skill level: Bad
+–Name: Bob; Gender: Male; Career: 6 Grade student in
+the US; MM skill level: Bad
+–Name: Charlie; Gender: Male; Career: 6 Grade student
+in the US; MM skill level: Good
+We manually add some common mistakes to the questions
+from the GSM8k. One example is as follows:
+Question : Jon runs a triathlon. It takes him 40 minutes
+for the swim, an hour and 20 minutes for the bike ride, and
+50 minutes for the run. Compared to Jon, James finishes the
+swim 10% faster but takes 5 minutes longer on the bike. If
+Jon won by 10 minutes, how long did it take James to do the
+run?
+Answer : Jon did the bike ride in 60+20=80 minutes. So
+his total time was 40+80+50=170 minutes. James finished
+the swim 40*.1=4 minutes faster. So he finished the swim
+in 40-4=36 minutes. He finished the bike ride in 80+5=85
+minutes. James’ total time was 170+10=180. So it took him
+180-85-36=59 minutes to do the run.
+Common Mistakes :
+1.The student thinks the time to take the bike for Jon is 20
+min and calculates the time for Jon to finish the game into
+40+20+50=110 minutes.
+2.The student calculates the time it took James to complete
+the swim correctly but then forgets to convert Jon’s bike
+time to minutes before adding the 5 minutes that James
+took longer.
+3.The student adds the 10 minutes that Jon won by to the
+total time it took James to complete the swim and bike
+ride instead of subtracting it from Jon’s total time to find
+James’ run time.D Ablation Studies Evaluating Key Prompt
+Designs in M ATHVC
+In this section, we investigate the effects of selecting different
+prompt strategies in each module. Through the prompting
+study, we would like to carefully design the prompt for each
+component to allow them to reach their full potential. In ad-
+dition, we aim to provide some insights from a prompt engi-
+neering perspective for future simulations of other characters.
+When we explore and select the best prompt, we manually
+check the generation of the components to determine whether
+they are satisfactory. The analysis was performed manually
+on the dev set. Our results are presented in Table 3.
+Character schema update: regeneration or editing
+While we prompt the LLM to generate a sequence of ed-
+its that should be applied to the present character schema, an
+alternative approach could be to directly generate the updated
+schema. As shown in Table 3a, we found that editing schema
+yields a higher satisfaction rate than regenerating it. Although
+regeneration can generate schema flexibly, it is prone to add
+some comments, such as “Note: this variable is incorrect” ,
+which is the information that the simulated student should
+not know. Besides, regeneration takes a longer time when it
+generates a schema from scratch.
+Dialogue act generation: selection or generation Alter-
+native to our approach of prompting the LLM to generate a
+plausible dialogue act and describe a more detailed plan, one
+could prompt the LLM to directly select an act from the list.
+Our results in Table 3b showed that our approach often yields
+more contextually reasonable acts. We conjecture that the list
+of dialogue acts is too generic for the LLM to select while
+allowing it to articulate its next action facilitates its planning.
+Response generation: direct or two-step generation As
+described in Section 2.4, we utilize a two-step generation in
+response generation. A simple approach is to directly gener-
+ate the response without variable retrieval from the character
+schema. However, our results in Table 3c suggest a disadvan-
+tage of this direct approach.
+E Human Interaction
+In the main experiment (Section 3.2), we only show the
+dialogues between simulated student characters. In this sec-
+tion, we would like to show the interaction between human
+and simulated characters. We are not able to recruit middle-
+school students. Therefore, one of our authors tries to mimic
+a middle-school student to conduct a preliminary study.
+We show an example below. In this example, we use Daniel
+as the placeholder for human. At every turn, Daniel could
+choose to respond or skip.
+In this example, we have observed that the dialogue flows
+smoothly, and the interactions between human and simulated
+characters are natural. For example, when a student asks a
+question, the simulated character could respond appropriately
+to address the query; if a student provides an incorrect an-
+swer, the simulated character could correct it; and if a student
+would like to talk with a specific character, that character re-
+sponds accordingly. This is largely attributed to the powerful
+text understanding and interaction capabilities of the LLM,
+showcasing the promise for future deployment.
+
+Method Satisfaction
+Generation 0.73
+Editing (ours) 1.00
+(a) Character Schema UpdateMethod Satisfaction
+Selection 0.59
+Generation (ours) 0.85
+(b) Action GenerationMethod Satisfaction
+Direct Generation 0.92
+Two-step Generation 1.00
+(c) Response Generation
+Table 3: Ablation studies validating the effectiveness (satisfaction rate) of our prompt design.
+1We use Daniel as the placeholder name of
+human
+2Now let’s start a group discussion
+within the group of Alice, Bob,
+Charlie, and Daniel
+3Daniel: Hi good to see you guys! Let’s
+work together!
+4Alice: Hey everyone, I think we should
+split the tasks based on our
+strengths. I’m happy to take on the
+research part. What roles do you guys
+feel comfortable with? Let’s make
+sure we’re all okay with our
+responsibilities
+5Daniel: I will take responsibility for
+validating the answers!
+6Bob: I’m good with organizing and
+keeping track of our progress, so I
+can handle the project management
+side of things. Does that work for
+everyone?
+7Daniel: How about you Charlie?
+8(When Daniel asks the reply from Charlie,
+the next speaker is correctly
+predicted as Charlie.)
+9Charlie: I’m comfortable with handling
+the writing and compilation of our
+work. Does that fit well with
+everyone else’s roles?
+10Daniel: It works for me!
+11Charlie: Let’s start the problem solving
+by calculating the soup flavor
+preferences from the survey data we’
+ve collected.
+12Daniel: How to get this?
+13(When Daniel asks the question, the
+simulated character will answer it.)
+14Charlie: So, we just take the number of
+votes each soup got, like 6 votes for
+Carrot Coriander, and divide it by
+the total number of people surveyed,
+which is 40, then multiply by 100 to
+get the percentage, which for Carrot
+Coriander is 15%!
+15Daniel: Oh, it makes sense to me! So the
+tomato is 16/40, which is 40% and
+leek is 10/40=25%.
+16(When Daniel gives correct solution, the
+simulated character will encourage
+him.)
+17Charlie: Exactly, Daniel! And for the
+Chicken Vegetable, it’s 8 out of 40,
+which gives us 20%. Now let’s figure
+out the bread roll preferences; 30
+people chose White Bread, so that’s75%, and 10 for Brown Bread, which is
+25% of our survey.
+18Alice: Great job on the percentages,
+guys! Now let’s figure out how many
+servings we need for each soup to
+serve 500 people; we’ll use the
+percentages we just calculated to get
+the right amounts for each flavor!
+19Daniel: So the number of people to buy
+carrot soup is 500 *0.4=20?
+20(When Daniel makes a mistake, the
+simulated character will correct it
+with details.)
+21Charlie: Oh, Daniel, you got a little
+mixed up! For the Carrot Coriander
+soup, we need to use its percentage,
+which is 15%, not 40%. So we multiply
+500 customers by 0.15, and that
+gives us 75 servings for Carrot
+Coriander. The Tomato soup needs 200
+servings because it’s 40%, Leek
+Potato needs 125 servings for 25%,
+and Chicken Vegetable needs 100
+servings for 20%.
+22Daniel: Oh! I understand it now! What’s
+your thought, Bob?
+23Bob: Yep, Charlie, you’ve got it right!
+We need 75 servings of Carrot
+Coriander, 200 for Tomato, 125 for
+Leek Potato, and 100 for Chicken
+Vegetable.
+24Daniel: What’s your thought, Alice?
+25(When Daniel asks Alice, she replies
+him.)
+26Alice: I think we need 8 bottles for
+Carrot Coriander, 20 for Tomato, 13
+for Leek Potato, and 10 for Chicken
+Vegetable. Now, let’s figure out how
+many packs of bread rolls we need,
+and then we can work out the total
+cost for all the soup and bread!"
+27Bob: Actually, for the Leek and Potato
+soup, we need exactly 12.5 bottles
+because 125 servings divided by 10
+servings per bottle equals 12.5.
+28Daniel: But I think we need to round it
+up to 13!
+29(When Daniel corrects other’s mistake,
+the simulated character will convey
+agreement.)
+30Alice: Yep, rounding up to 13 bottles
+for the Leek Potato soup makes sense,
+and we’ll need 38 packs for White
+Bread and 13 for Brown Bread. After
+that, we can add up the costs to see
+
+how much all the soup and bread will
+set us back!"
+31Bob: Alright, we’re set with 13 bottles
+for the Leek Potato soup! Let’s add
+up the costs now; each bottle is $5
+and each pack of rolls is $2, so if
+we do the math, we’ll see how much we
+’ll spend on all the soup and bread
+rolls combined!
+32Daniel: I like the current progress! Now
+let’s find the final answer!
+33Alice: We’ve got 13 bottles for the Leek
+Potato soup since we always round up
+, and we need 38 packs for White
+Bread and 13 for Brown Bread. If we
+multiply the number of bottles and
+packs by their costs, we’ll spend
+$252.5 on soup and $102 on bread
+rolls, making our total $354.5!
+34Daniel: I don’t agree with that. Could
+anyone help to check the answer?
+35(When Daniel express disagreement, other
+simulated characters will actively
+discuss this.)
+36Charlie: Hey guys, I think there’s a
+little mix-up; the total cost for the
+soup is actually $255 and for the
+bread rolls, it’s $102, so our total
+cost should be $357. And yep, we’re
+using 13 bottles for the Leek Potato
+soup. Let’s double-check these
+numbers to make sure everything adds
+up right!
+37Daniel: I agree with that!
+38Alice: You’re right, the soup costs $255
+and the bread rolls are $102, so our
+total is $357, and we definitely
+need 13 bottles for the Leek Potato
+soup. Let’s double-check to make sure
+we’ve got it all correct!
+39Bob: Yep, the soup definitely costs us
+$255 and with the bread rolls at $102
+, our grand total is $357, and we’re
+getting 13 bottles for the Leek
+Potato soup to cover all the servings
+we need!
+Listing 4: An example dialogue with human interaction
+F Characteristics Analysis
+To analyze the impact of traits other than MM skill levels,
+we use different characteristics with different names such as
+Alice/Bob/Charlie compared with Cecelia/Lucas/Leo, as well
+as varying gender setups, such as all male or female. Addi-
+tionally, we explore different career setups, such as varying
+grades (ranging from 6 to 8) or countries (e.g., US or Brazil).
+These variations are tested on our dev set.
+Instead of running the simulation under each characteristic
+configuration end to end, we conducted a series of controlled
+ablation studies. That is, for each component in MATHVC,
+we first randomly sampled a few LLM queries from the log of
+our main experiments (e.g., a query for response generation is
+shown in the listing below). We then prompted the LLM withtwo different characteristic configurations and checked the
+difference between the generation results. For instance, we
+initially set the character names as Alice, Bob, and Charlie
+and let the LLM generate a response. In our ablation study,
+we replaced the names with Cecelia, Lucas, and Leo without
+any other changes in the prompt (including the conversational
+context) and prompted the LLM to generate another response.
+Finally, we compare the differences between these two gen-
+erations. To mitigate the effect of randomness, we set the
+sampling temperature to 0. The advantage of this analysis
+compared with end-to-end dialogue generation lies in that it
+offers us a more controlled and direct comparison between
+two characteristic configurations, with all other factors being
+exactly the same.
+On the dev set, we randomly selected about 30 prompts
+containing characteristics from our log file, covering different
+modules and discussion stages. We only replaced one variable
+each time, such as only replacing names or genders. Then
+we manually examined the differences. An example is shown
+below.
+1Input with names Alice, Bob and Charlie:
+2Charlie’s thoughts schema:
+3{
+4"task 1": {
+5 ...
+6}
+7
+8Conversation:
+9Now let’s start a group discussion!
+10Bob: " Hey everyone, so we’ve got
+several tasks ahead of us, including
+calculating preferences for soup
+flavors and bread rolls from a survey
+, determining the number of servings
+and bottles needed for each soup
+flavor, figuring out the packs of
+bread rolls required, and then
+calculating the total costs, revenue,
+and profit for Martha’s event. Let’s
+tackle these one by one!"
+11Alice: " Okay, so we’re starting with
+calculating the soup and bread roll
+preferences from the survey, then we’
+ll work out how much of each we need,
+and finally, we’ll figure out the
+costs, revenue, and profit for the
+event, right?"
+12Charlie: " I can start by calculating
+the soup and bread roll preferences
+from the survey. Does anyone want to
+tackle the servings and bottles
+needed, or should we decide that
+together? Also, great job outlining
+the tasks, Bob!"
+13Alice: " I can handle the calculations
+for the servings and bottles needed
+for each soup flavor if that’s okay
+with everyone?"
+14Bob: " Thanks, Charlie, for taking on
+the survey preferences, and Alice,
+your help with the servings and
+bottles is perfect. I can calculate
+the total costs, revenue, and profit
+
+unless someone else wants to. Does
+this sound good to everyone?"
+15Alice: " Let’s start the problem solving
+by figuring out how many people
+preferred each soup flavor by
+calculating the percentage based on
+our survey results."
+16Generate a reply from Charlie based on
+the action and the variables from
+Charlie thought schema. Never mention
+the "task" word in the reply.
+Remember you’re a grade school
+student, please reply in one sentence
+with the tone of a grade school
+student. You believe that your
+thought schema is completely correct,
+and all the variables in reply must
+be perfectly aligned to your own
+thought schema.
+17The action to take is " Charlie will
+begin by discussing task 1 and task
+2, using the variables from his
+thought schema to calculate the
+percentages of each soup flavor and
+bread roll preference based on the
+survey results. Charlie will then
+present these calculations to the
+group.". Before generating the reply,
+ground the tasks and variables
+mentioned in the action from your
+thought schema. Then generate the
+response. The output format is
+Related tasks index:... Grounding
+values in those tasks:... Charlie:...
+18Output with names Alice, Bob and
+Charlie:
+19Related tasks index: 1, 2.
+20Grounding values in those tasks: For the
+soup flavors, we have carrot
+coriander at 15%, tomato at 40%, leek
+potato at 25%, and chicken vegetable
+at 20%. For the bread rolls, white
+bread is preferred by 75% and brown
+bread by 25%.
+21Charlie: "Based on our survey, 15% like
+carrot coriander soup, 40% prefer
+tomato, 25% go for leek potato, and
+20% choose chicken vegetable. For
+bread rolls, 75% enjoy white bread
+and 25% prefer brown bread."
+22
+23Input with names Cecelia, Lucas and Leo:
+24Leo’s thoughts schema:
+25{
+26 "task 1": {
+27 ...
+28}
+29
+30Conversation:
+31Now let’s start a group discussion!
+32Lucas: " Hey everyone, so we’ve got
+several tasks ahead of us, including
+calculating preferences for soup
+flavors and bread rolls from a survey
+, determining the number of servingsand bottles needed for each soup
+flavor, figuring out the packs of
+bread rolls required, and then
+calculating the total costs, revenue,
+and profit for Martha’s event. Let’s
+tackle these one by one!"
+33Cecelia: " Okay, so we’re starting with
+calculating the soup and bread roll
+preferences from the survey, then we’
+ll work out how much of each we need,
+and finally, we’ll figure out the
+costs, revenue, and profit for the
+event, right?"
+34Leo: " I can start by calculating the
+soup and bread roll preferences from
+the survey. Does anyone want to
+tackle the servings and bottles
+needed, or should we decide that
+together? Also, great job outlining
+the tasks, Lucas!"
+35Cecelia: " I can handle the calculations
+for the servings and bottles needed
+for each soup flavor, if that’s okay
+with everyone?"
+36Lucas: " Thanks, Leo, for taking on the
+survey preferences, and Cecelia, your
+help with the servings and bottles
+is perfect. I can calculate the total
+costs, revenue, and profit unless
+someone else wants to. Does this
+sound good to everyone?"
+37Cecelia: " Let’s start the problem
+solving by figuring out how many
+people preferred each soup flavor by
+calculating the percentage based on
+our survey results."
+38Generate a reply from Leo based on the
+action and the variables from Leo
+thought schema. Never mention the "
+task" word in the reply. Remember you
+’re a grade school student, please
+reply in one sentence with the tone
+of a grade school student. You
+believe that your thought schema is
+completely correct, and all the
+variables in reply must be perfectly
+aligned to your own thought schema.
+39The action to take is " Leo will begin
+by discussing task 1 and task 2,
+using the variables from his thought
+schema to calculate the percentages
+of each soup flavor and bread roll
+preference based on the survey
+results. Leo will then present these
+calculations to the group.". Before
+generating the reply, ground the
+tasks and variables mentioned in the
+action from your thought schema. Then
+generate the response. The output
+format is Related tasks index:...
+Grounding values in those tasks:...
+Leo:...
+40Output with names Cecelia, Lucas and
+Leo:
+41Related tasks index: 1, 2
+
+42Grounding values in those tasks:
+43- For soup preferences, 15% like carrot
+coriander, 40% prefer tomato, 25% go
+for leek potato, and 20% choose
+chicken vegetable.
+44- For bread roll preferences, 75% prefer
+white bread and 25% prefer brown
+bread.
+45Leo: "Based on our survey, 15% of people
+like carrot coriander soup, 40%
+prefer tomato, 25% enjoy leek potato,
+and 20% choose chicken vegetable.
+For bread rolls, 75% of folks prefer
+white bread, and 25% go for brown
+bread."
+Listing 5: An example of characteristics analysis with varying
+character names
+From the example, although we changed the names, the
+responses are quite similar (except for negligible language
+variations). Overall, we observe that these characteristic vari-
+ations other than the math skills only have a very minor
+impact on the LLM’s response. Most of the generations with
+different variations remain the same and none of the gen-
+erations have been greatly changed. In particular, we did
+not observe any unfair simulation, such as simulating stu-
+dents with certain names or from a certain gender population
+with excessively good or bad behaviors. The reason could
+be that through reinforcement learning with human feed-
+back (Ouyang et al. 2022), GPT-4 has been fine-tuned to
+avoid potential biases of these variations. Additionally, our
+prompts focus on discussing mathematical problems, without
+emphasizing backgrounds other than the MM skill levels of
+students. Under this well-defined scope, these background
+variations are not modeled as decisive factors in our current
+simulation.
+In the future, we consider it as a potentially impactful topic
+to systematically investigate approaches to properly simulate
+different cultural or linguistic backgrounds of students. This
+could be an important step toward providing personalized
+learning environments to individual human students because,
+intuitively, students can benefit from interacting with team-
+mates who share a similar background with them. Systematic
+evaluation of the potential biases should then be carefully
+designed and conducted.
+G Human Evaluation Guideline
+The annotators were instructed to evaluate the characteristics
+alignment and conversational procedural alignment of each
+sampled multi-character dialogue. For the former, the anno-
+tators evaluate whether the multi-turn responses from each
+character are well aligned to its configured characteristics and
+present coherently changing problem understanding and solv-
+ing. For the latter, the annotators evaluate whether the entire
+conversation follows a procedure close to a real collaborative
+mathematics problem-solving conversation among middle-
+school students, particularly showing the transition across
+different stages. For each metric, the annotators assigned a
+score ranging from 1 (worst) to 4 (best) accompanied by
+fine-grained comments for our post-analysis. The annotationguideline is shown below.
+1
+2First, thank you for your help! This
+document is the guideline for the
+evaluation. Every case contains a
+math question, its answer, each
+student’s character traits, and
+multiple dialogues. The dialogues are
+shuffled to avoid tricks. Please
+read the question, answer and
+character traits first. Then evaluate
+the following aspects for each
+dialogue:
+3Evaluate individual character responses
+4Character Alignment: Do the multi-turn
+responses from a character coherently
+show the change in problem
+understanding and modeling? Does a
+student with the given character have
+the possibility to do math modeling
+like this?
+5Scores:
+61: not coherent
+72: somewhat coherent
+83: mostly coherent
+94: perfectly coherent
+10
+11Evaluate inter-character conversations
+12Conversational Procedure: Does the
+entire conversation show proper
+progress? In our simulation, we
+define a successful conversation to
+go over stages: understanding sharing
+, team organization, problem-solving,
+validation. Is there likely that the
+given discussion is real from the
+middle school student?
+13Scores:
+141: not organized, not realistic
+152: somewhat organized and realistic
+163: mostly fine
+174: perfect and realistic
+18Lastly, please add your thoughts in the
+comment, especially for those
+dialogues you give a low score.
+Listing 6: Our annotation guideline for system evaluation
+H Self-Play Annotation Details
+Interrater agreement The average score for annotator 1 is
+2.95 and for annotator 2 is 3.4, which indicates that annota-
+tor 1 is a relatively stricter evaluator. We also measure the
+agreement between them by seeing if they consistently agree
+on one system over the other (i.e., their ranks of systems).
+This is calculated with the average Spearman’s Rank Cor-
+relation coefficient (ranging from –1 to 1, with 1 indicating
+the same rank, 0 random, and –1 the completely opposite
+rank). We get 0.94 on the character alignment and 0.65 on
+the conversational alignment, which indicates an agreement
+of the ranking order between the two annotators.
+Are the differences between the different versions of
+LLM agents evaluated statistically significant? We per-
+form a t-test for the vanilla simulation, the domain-specified
+
+Simulation, and our method. The P-values are in the table 4
+(P-value¡0.05 is statistically significant). We could see that ex-
+cept for the Conversational Procedural Alignment of the pair
+(vanilla simulation, domain-specific simulation), the other
+values show the. Specifically, our method is significantly
+better than the vanilla simulation in these two metrics.
+I Prompts for Dialogue Act Generation and
+Response Generation
+1During conversations, people generate
+reactions based on their own thought
+schemas and the content of the
+conversation and then respond with
+corresponding conversational
+behaviors. Please determine the
+conversational actions that the next
+speaker would take based on the
+following conversation content and
+thought schema.
+2Charlie thoughts schema:
+3{{
+4"task 1": {{
+5 "description": "Calculate the
+percentage of each soup flavor
+preference based on the survey.",
+6 "variables": {{
+7 "total_surveyed": 40,
+8 "carrot_coriander_votes": 6,
+9 "tomato_votes": 16,
+10 "leek_potato_votes": 10,
+11 "chicken_vegetable_votes": 8,
+12 "carrot_coriander_percentage": 15,
+# (6/40) *100
+13 "tomato_percentage": 40, #
+(16/40) *100
+14 "leek_potato_percentage": 25, #
+(10/40) *100
+15 "chicken_vegetable_percentage": 20
+# (8/40) *100
+16 }}
+17 }},
+18 "task 2": {{
+19 "description": "Calculate the
+percentage of each bread roll
+preference based on the survey.",
+20 "variables": {{
+21 "white_bread_votes": 30,
+22 "brown_bread_votes": 10,
+23 "white_bread_percentage": 75, #
+(30/40) *100
+24 "brown_bread_percentage": 25 #
+(10/40) *100
+25 }}
+26 }},
+27 "task 3": {{
+28 "description": "Calculate the number
+of servings needed for each soup
+flavor to cater to 500 customers.",
+29 "variables": {{
+30 "total_customers": 500,
+31 "servings_carrot_coriander": 75,
+# 500 *15%
+32 "servings_tomato": 200, # 500 *40%
+33 "servings_leek_potato": 125, #
+500 *25%
+34 "servings_chicken_vegetable": 100
+# 500 *20%
+35 }}
+36 }},
+37 "task 4": {{
+38 "description": "Calculate the number
+of bottles needed for each soup
+flavor.",
+39 "variables": {{
+40 "servings_per_bottle": 10,
+41 "bottles_carrot_coriander": 8, #
+ceil(75 / 10)
+42 "bottles_tomato": 20, # 200 / 10
+43 "bottles_leek_potato": 13, # ceil
+(125 / 10)
+44 "bottles_chicken_vegetable": 10 #
+100 / 10
+45 }}
+46 }},
+47 "task 5": {{
+48 "description": "Calculate the number
+of bread roll packs needed for each
+type to cater to 500 customers.",
+49 "variables": {{
+50 "rolls_per_pack": 10,
+51 "packs_white_bread": 38, # ceil
+(375 / 10)
+52 "packs_brown_bread": 13 # ceil
+(125 / 10)
+53 }}
+54 }},
+55 "task 6": {{
+56 "description": "Calculate the total
+cost for soup and bread rolls.",
+57 "variables": {{
+58 "cost_per_bottle_soup": 5,
+59 "cost_per_pack_bread": 2,
+60 "total_cost_soup": 255, # (8 + 20
++ 13 + 10) *5
+61 "total_cost_bread": 102, # (38 +
+13) *2
+62 "total_cost": 357 # 255 + 102
+63 }}
+64 }},
+65 "task 7": {{
+66 "description": "Calculate the total
+revenue from selling 500 mugs of soup
+with bread rolls.",
+67 "variables": {{
+68 "price_per_mug_with_roll": 1.25,
+69 "total_revenue": 625 # 500 *1.25
+70 }}
+71 }},
+72 "task 8": {{
+73 "description": "Calculate the profit
+Martha will make.",
+74 "variables": {{
+75 "profit": 268 # 625 - 357
+76 }}
+77 }}
+78}}
+79Actions to take:
+
+Pair Characteristic Alignment P-value Conversational Procedural Alignment P-value
+(Vanilla Simulation, Domain-Specified Simulation) 0.044 0.075
+(Domain-Specified Simulation, Our method) 0.008 0.010
+(Vanilla Simulation, Our method) <0.001 <0.001
+Table 4: T-test
+80(1)Plan actions for problem-solving:
+81-Prompt a teammate to join the
+discussion
+82-State an action plan
+83-Ask a clarifying question about an
+action plan
+84-Answer a clarifying question about an
+action plan
+85-Second an action plan
+86-Ask for agreement on an action plan
+87(2) Execute actions for problem-solving:
+88-Execute an action plan and state the
+execution result
+89-Ask a clarifying question about an
+execution result
+90-Answer a clarifying question about an
+execution result
+91-Second an execution result
+92-Ask for agreement on an execution
+result
+93Conversation:
+94Now let’s start a group discussion!
+95Alice: " Hey team, I think we should
+divide the tasks. I can analyze the
+survey data to determine the most
+popular soup and bread roll choices.
+What roles would you all prefer, and
+does everyone agree with this plan?"
+96Bob: " Sounds good, Alice! I can handle
+the cost analysis and figure out how
+much we’ll need to spend. Does anyone
+want to tackle the logistics of
+purchasing and setting up the stall?
+Let’s make sure we’re all on the same
+page with these roles."
+97Charlie: " I can take on the role of
+organizing the purchasing and setup
+of the stall. Does that work for
+everyone, and is there anyone else
+who wants to join in on a specific
+task? Let’s start the problem-solving
+by calculating how much of each soup
+flavor we need based on the survey
+preferences to ensure we cater to
+everyone’s taste without excess waste
+."
+98Alice: "Bob, before we proceed, could
+you help me verify if we’re
+calculating the servings for each
+soup flavor correctly? We need to
+ensure our numbers are accurate to
+avoid over or underestimating the
+amount needed."
+99Bob: "Alice, based on the survey, tomato
+is the most popular one. So we
+should provide 500 servings oftomatoes."
+100
+101The next speaker is Charlie. Now please
+decide what action Charlie will take,
+including discussing which tasks,
+discussing which variables, etc.
+Remember you are Charlie, and your
+actions should follow your thought
+schema. Please carefully examine the
+variables mentioned by others in the
+conversation. For any variables in
+the dialogue that are inconsistent
+with your thought schema values, you
+should try to request others to
+examine them carefully. Please
+remember, "Action" only indicates how
+Charlie will take action in the next
+response, such as asking questions
+or continuing to discuss the next
+task, and should not include what
+Charlie might say. The output format
+is:
+102variables and values in the current task
+:...
+103Charlie thought about these variables
+:...
+104Explain:...
+105Action with variables and task from
+schema:...
+106####
+107variables and values in the current task
+: "tomatos_servings": 500
+108Charlie thought about these variables: "
+tomatos_servings": 200
+109Explain: Everyone is discussing task 3.
+Bob believes the value of tomato
+servings should be 500. According to
+the thought schema, Charlie believes
+the value of tomato servings is 200.
+Therefore, Charlie’s action will be
+to refute Bob’s point of view
+regarding tomato and explain why he
+thinks it’s 200.
+110Action with variables and task from
+schema: Charlie will continue to
+discuss task 3 and will explain why
+he thinks the tomato servings is 200.
+111####
+112...(more examples)
+113####
+114{name} thoughts schema:
+115{character_schema}
+116Conversation:
+117{conversation_input}
+118Action to take:
+119{action}
+
+120The next speaker is {name}. Now please
+decide what action {name} will take,
+including discussing which tasks,
+discussing which variables, etc.
+Remember you are {name}, and your
+actions should follow your thought
+schema. Please carefully examine the
+variables mentioned by others in the
+conversation. For any variables in
+the dialogue that are inconsistent
+with your thought schema values, you
+should try to request others to
+examine them carefully. Please
+remember, "Action" only indicates how
+{name} will take action in the next
+response, such as asking questions or
+continuing to discuss the next task,
+and should not include what {name}
+might say. The output format is:
+121variables and values in the current task
+:...
+122{name} thought about these variables:...
+123Explain:...
+124Action with variables and tasks from
+schema:...
+Listing 7: Prompt for dialogue act generation
+1{name}’s thoughts schema:
+2{character_schema}
+3
+4Conversation:
+5{conversation_input}
+6Generate a reply from {name} based on
+the action and the variables from {
+name} thought schema. Never mention
+the "task" word in the reply.
+Remember you’re a middle school
+student, please reply in one sentence
+with the tone of a middle school
+student. You believe that your
+thought schema is completely correct,
+and all the variables in reply must
+be perfectly aligned to your own
+thought schema.
+7The action to take is "{action}". Before
+generating the reply, ground the
+tasks and variables mentioned in the
+action from your thought schema. Then
+generate the response. The output
+format is:
+8Related tasks index:...
+9Grounding values from {name} thoughts
+schema in those tasks:...
+10Now, as a middle school student, {name}
+would say:...
+Listing 8: Prompt for response generation
+
+(Establishing Shared Understanding)
+Alice: Okay , so first we need to figure out how many games Steve gets each year , right?
+...
+(Planning & Problem Solving)
+Alice: Oh, I almost for got about the monthly games.  So, for the first year , it's 12 from buying one each month, and then 5 for
+Christmas, right?
+Bob: Yes, that's 17 games for the first year .
+...
+Charlie: But don't for get, we need to add the initial 5 games he got with his console to the total as well. So that would be 104 games
+after 3 years.
+Alice: Oh yeah, I missed those first 5 games.  So with those, Steve has 104 games in total after 3 years.
+Bob: Right, so we have 17 games from the first year , 29 from the second year , and 53 from the third year , plus the initial 5 games
+from his birthday . That makes 104 games in total.
+(Validating the result)
+Charlie: Looks like we've got it all covered. Steve ends up with 104 games after 3 years.
+Alice: Great, so we all agree that Steve has 104 games after 3 years. Good job, everyone!
+(Establishing Shared Understanding)
+Alice:  Okay , so for our project, we need to calculate the number of games Steve buys each year for three years, the games he receives
+as gifts for Christmas, and then the total number of games he has after three years.
+Bob: Got it, Alice. So we'll be tracking Steve's game purchases over three years, his Christmas gifts, and then summing it all up to
+find out his total game collection after that period. I think we should divide the tasks. Maybe one of us can handle the game
+purchases, another the Christmas gifts, and a third could work on the total calculation. What do you guys think?
+(Establishing T eam Organization)
+Alice: I can take care of calculating the game purchases Steve makes each year . Does anyone want to handle the Christmas gifts, or
+should we rotate that responsibility?
+Charlie: I can handle tracking the Christmas gifts Steve receives. We could also set up a shared document to monitor our progress.
+Does that work for everyone?
+Alice: Great idea, Charlie! Who would like to take on the total calculation, or shall I add that to my tasks?
+Charlie: I'm on board with tracking the Christmas gifts. Bob, would you like to handle the total calculations, or should we discuss
+this further?
+Bob: I'm happy to handle the total calculations.
+(Planning & Problem Solving)
+Alice: Let's start by figuring out how many games Steve buys in the first year , which is simply the number of games he gets each
+month times the number of months in a year .
+...
+Charlie: So if we add up all the games Steve bought over the three years, which is 12 the first year , 24 the second year , and 48 in the
+third, plus the 15 games he got for Christmas, he'll have a total of 99 games after three years!
+Alice: You nailed it! So he has a total of 99 games after three years. Let's double-check the starting number just to be sure!
+Charlie: Hey Alice, he actually has a total of 104 games!
+Alice: Can you explain why you think it's 104?
+Charlie: Actually , Alice, Steve started with 5 games, not zero, so if we add those to the 99 games he got over three years, it's 104
+games in total. We should double-check the starting number to make sure we've got it right, and I'll update our shared document with
+the correct total!
+Alice: Charlie, you're right, Steve did start with 5 games, and if we add all the games he got over the years, it's 104 games in total!
+(Validating the result)
+Charlie: Yep, I've double-checked, Steve has a grand total of 104 games after three years, including the 5 he started with and all the
+gifts and purchases!
+Bob: Awesome, everything checks out! Steve's game collection is definitely at 104 games after three years!(Planning & Problem Solving)
+Bob: Hey everyone, so we're trying to figure out how many games Steve has after 3 years, right? Let's break it down year by year . In
+the first year , he starts with 5 games from his birthday . Then he buys 1 game per month, which means 12 games in a year , right? So at
+the end of the first year , he has 5 + 12 games. Plus, he gets 5 more games for Christmas. That's 5 + 12 + 5. Does that make sense so
+far?
+...
+Alice: Oh, okay , I think I'm following. So for the first year , Steve has 22 games in total. Now , for the second year , Charlie said he
+gets 24 games because he buys 2 each month, and then another 5 for Christmas, so that's 24 + 5 for the second year . If we add that to
+the first year's 22 games, let me think. That's 46 + 5... which is 51 games at the end of the second year , right? Now , for the third year ,
+he buys 4 games a month, and there are 12 months, so that's 4 times 12... um, I'm not great at math, but I think that's 48 games ? Plus,
+he gets another 5 for Christmas. So for the third year , he has 48 + 5 games. We need to add that to the 51 games he already has from
+the first two years. So, 51 + 48 + 5... that's 99 + 5... which is 104 games in total after three years. Problem Description:  Steve loves playing video games. His parents get him a console along
+with 5 games for his birthday .  He saves up enough money to buy 1 game per month for a
+year, and then the following year he starts buying 2 games a month.   For the third year he buys
+4 games a month as he has a new part-time job that makes him more money .  He also gets 5
+games for Christmas every year .  How many games does Steve have after 3 years?Character  Configuration :
+Alice: Female, Grade 6, MM: Bad  
+Bob: Male, Grade 6, MM: Good
+Charlie: Male, Grade 6, MM: Good
+Vanilla Simulation
+Domain-Specified
+Simulation
+M A THVC (Ours)Figure 4: Case study for different simulation approaches. We manually annotated the simulated stages in blue and indicated
+responses reflecting Alice’s bad math skill in red. In the vanilla simulation, Alice merely verbally indicates that she struggles
+with math but still gives a correct calculation “48”, whereas in MATHVC, she makes a genuine mathematical modeling mistake.
+
