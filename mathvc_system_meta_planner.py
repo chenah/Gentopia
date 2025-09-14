@@ -41,7 +41,7 @@ class MATHVCMetaPlannerSystem:
         self.current_stage_index = 0
         
         # Meta Planner核心组件
-        self.task_schema = {}
+        self.task_schema = None
         self.character_schemas = {}
         
         # 角色定义
@@ -87,8 +87,10 @@ class MATHVCMetaPlannerSystem:
             'timestamp': time.time()
         })
         
-        # 如果是第一次输入，生成初始多角色讨论
+        # If this is the first input, generate the task and character schemas
         if len(self.conversation_history) == 1:
+            self._generate_task_schema(user_input)
+            self._generate_character_schemas()
             return self._generate_initial_discussion(user_input)
         
         # 后续输入：Meta Planner的Dialogue Speaker Control
@@ -105,7 +107,7 @@ class MATHVCMetaPlannerSystem:
         """
         initial_discussion = []
         for agent_name in self.agents:
-            response = self._generate_character_response_two_step(agent_name, user_input)
+            response = self._generate_character_response(agent_name, user_input)
             initial_discussion.append({
                 'speaker': self.agents[agent_name]['name'],
                 'message': response
@@ -116,6 +118,74 @@ class MATHVCMetaPlannerSystem:
                 'timestamp': time.time()
             })
         return {'initial_discussion': initial_discussion}
+
+    def _generate_task_schema(self, user_input: str):
+        """
+        Generates the Task Schema based on the user's problem description.
+        This is the ground-truth model for solving the problem.
+        """
+        prompt = f"""
+        Based on the following math problem, create a Task Schema in JSON format.
+        The schema should decompose the problem into sub-tasks, and for each sub-task, identify the necessary variables and their correct values.
+
+        Problem: {user_input}
+
+        Please only output the JSON object.
+        """
+        
+        try:
+            response_text = self._call_llm(prompt, max_tokens=1500)
+            # Clean the response to ensure it's valid JSON
+            clean_response = response_text.strip().replace('`', '')
+            if clean_response.startswith('json'):
+                clean_response = clean_response[4:]
+            self.task_schema = json.loads(clean_response)
+            print("Task Schema generated successfully.")
+        except Exception as e:
+            print(f"Error generating or parsing Task Schema: {e}")
+            self.task_schema = None # Ensure schema is None if generation fails
+
+    def _generate_character_schemas(self):
+        """
+        Generates Character Schemas for each agent by injecting potential errors
+        into the Task Schema based on their characteristics.
+        """
+        if not self.task_schema:
+            print("Cannot generate Character Schemas without a Task Schema.")
+            return
+
+        for agent_name, agent_info in self.agents.items():
+            task_schema_str = json.dumps(self.task_schema, indent=4)
+            math_level = agent_info['math_level']
+            personality = agent_info['personality']
+
+            prompt = f"""
+            You are simulating a middle school student with the following characteristics:
+            - Math Skill Level: {math_level}
+            - Personality: {personality}
+
+            Here is the correct Task Schema for a math problem:
+            {task_schema_str}
+
+            Based on the student's characteristics, please modify this JSON schema to reflect a common mistake they might make. 
+            - If the skill level is '较好' (good), make a very subtle mistake or no mistake at all.
+            - If the skill level is '中等' (medium), make a plausible calculation or modeling error.
+            - If the skill level is '较差' (poor), make a more fundamental misunderstanding or calculation error.
+
+            Only output the modified JSON object, with no other text or explanations.
+            """
+
+            try:
+                modified_schema_str = self._call_llm(prompt, max_tokens=1500)
+                # Clean the response to ensure it's valid JSON
+                clean_response = modified_schema_str.strip().replace('`', '')
+                if clean_response.startswith('json'):
+                    clean_response = clean_response[4:]
+                self.character_schemas[agent_name] = json.loads(clean_response)
+                print(f"Generated and modified character schema for {agent_name} ({math_level} level).")
+            except Exception as e:
+                print(f"Error generating character schema for {agent_name}: {e}. Using a direct copy instead.")
+                self.character_schemas[agent_name] = json.loads(json.dumps(self.task_schema))
     
     def _dialogue_speaker_control(self, user_input: str) -> Dict[str, Any]:
         """
@@ -415,88 +485,82 @@ class MATHVCMetaPlannerSystem:
     
     def _generate_character_response(self, agent_name: str, user_input: str) -> str:
         """生成角色响应 - 融合原系统优秀的两步响应生成方法"""
-        # 使用原系统的两步响应生成方法提升质量
-        return self._generate_character_response_two_step(agent_name, user_input)
+        # This method is now the entry point for the two-step generation
+        dialogue_act = self._generate_dialogue_act(agent_name, user_input)
+        return self._generate_character_schema_based_response(agent_name, dialogue_act)
     
-    def _generate_character_response_two_step(self, agent_name: str, user_input: str) -> str:
+    def _generate_dialogue_act(self, agent_name: str, user_input: str) -> str:
         """
-        基于论文的两步响应生成方法 - 融合原系统优秀实现：
-        1. 先从角色模式中提取相关变量
-        2. 再基于变量和对话行为生成响应
+        Generates a dialogue act for the character based on the current context.
         """
-        character_schema = self.character_schemas.get(agent_name, {})
+        character_schema_str = json.dumps(self.character_schemas.get(agent_name, {}), indent=4)
         agent_info = self.agents[agent_name]
-        current_stage = self.get_current_stage_name()
-        
-        # 步骤1：提取相关变量
-        variable_extraction_prompt = f"""
-        请从角色模式中提取与当前对话相关的变量。
-        
-        角色模式：
-        {json.dumps(character_schema, ensure_ascii=False, indent=2)}
-        
-        用户输入：{user_input}
-        当前协作阶段：{current_stage}
-        
-        当前对话上下文：
-        {self._get_recent_conversation_context()}
-        
-        请列出与当前讨论最相关的变量及其值，格式如下：
-        变量名1: 值1
-        变量名2: 值2
-        
-        如果没有直接相关的变量，请回答"无相关变量"。
+        recent_context = self._get_recent_conversation_context()
+
+        # Define dialogue acts based on the current stage
+        stage_dialogue_acts = {
+            "problem_understanding": ["present a task understanding", "ask for a clarifying question", "agree with a teammate", "disagree with a teammate"],
+            "modeling": ["propose a modeling plan", "ask about a modeling detail", "suggest a different model"],
+            "calculation": ["state a calculation result", "ask for help with a calculation", "double-check a calculation"],
+            "validation": ["confirm a result", "question a result", "propose a validation method"],
+            "summary": ["summarize the solution", "reflect on the process", "ask about the final answer"]
+        }
+        current_stage_name = self.get_current_stage()
+        available_acts = stage_dialogue_acts.get(current_stage_name, ["say something"])
+
+        prompt = f"""
+        You are simulating a middle school student named {agent_info['name']} with a {agent_info['math_level']} math level.
+        Your current understanding of the problem is represented by this schema:
+        {character_schema_str}
+
+        Here is the recent conversation:
+        {recent_context}
+
+        Based on the current situation and your personality, choose the most appropriate dialogue act from the following list:
+        {available_acts}
+
+        Your chosen act should be a short phrase describing your intent. For example: 'ask for a clarifying question about the total cost'.
+        Please only output the dialogue act phrase.
         """
         
         try:
-            relevant_variables = self._call_llm(variable_extraction_prompt, temperature=0.3, max_tokens=200)
+            dialogue_act = self._call_llm(prompt, temperature=0.8, max_tokens=100)
+            return dialogue_act.strip()
         except Exception as e:
-            print(f"提取相关变量时出错: {e}")
-            relevant_variables = "无相关变量"
-        
-        # 步骤2：基于变量生成响应
-        role_name = agent_info['name']
-        
-        response_generation_prompt = f"""
-        你是学生{role_name}，{agent_info['description']}。
-        
-        相关变量信息：
-        {relevant_variables}
-        
-        当前对话阶段：{current_stage}
-        数学能力水平：{agent_info['math_level']}
-        角色特点：{character_schema.get('character_traits', [])}
-        对话风格：{character_schema.get('dialogue_style', '自然对话')}
-        数学信心：{character_schema.get('math_confidence', '中等')}
-        
-        对话上下文：
-        {self._get_recent_conversation_context()}
-        
-        用户输入：{user_input}
-        
-        请以{role_name}的身份，根据你的角色特点和相关变量信息回应。
-        
-        要求：
-        1. 保持中学生的语言风格，简短、口语化
-        2. 体现你的数学能力水平和可能的错误理解
-        3. 如果有相关变量，要在回应中体现这些数值
-        4. 符合当前对话阶段的特点
-        5. 使用你的典型回应风格：{character_schema.get('typical_responses', [])}
-        
-        请生成{role_name}的回应（1-3句话）：
+            print(f"Error generating dialogue act for {agent_name}: {e}")
+            return "state a simple opinion"
+
+    def _generate_character_schema_based_response(self, agent_name: str, dialogue_act: str) -> str:
+        """Generates a character response based on their schema and a dialogue act."""
+        character_schema_str = json.dumps(self.character_schemas.get(agent_name, {}), indent=4)
+        agent_info = self.agents[agent_name]
+        recent_context = self._get_recent_conversation_context()
+
+        prompt = f"""
+        You are a middle school student named {agent_info['name']}.
+        - Your math skill level is: {agent_info['math_level']}
+        - Your personality is: {agent_info['personality']}
+
+        Here is your current understanding of the math problem (it might contain errors):
+        {character_schema_str}
+
+        Here is the recent conversation:
+        {recent_context}
+
+        Your assigned task is to perform the following dialogue act: "{dialogue_act}"
+
+        Based on your character, your understanding of the problem (your schema), and the dialogue act, please generate a short, natural-sounding response in the first person, as if you were this student.
+        Keep your response colloquial and to the point.
         """
-        
+
         try:
-            response = self._call_llm(response_generation_prompt, temperature=0.7, max_tokens=150)
-            
-            # 更新角色模式（模拟思维演进）
-            self._update_character_schema_based_on_response(agent_name, response)
-            
+            response = self._call_llm(prompt, temperature=0.85, max_tokens=200)
+            # In a future step, we could re-implement schema modification based on the response.
             return response.strip()
         except Exception as e:
-            print(f"生成{agent_name}回应时出错: {e}")
-            return f"我是{role_name}，让我想想这个问题..."
-    
+            print(f"Error in response generation for {agent_name}: {e}")
+            return "Uh... I'm not sure what to say."
+
     def _update_character_schema_based_on_response(self, agent_name: str, response: str):
         """基于响应更新角色模式（模拟思维演进）- 融合原系统优秀实现"""
         try:
@@ -515,31 +579,6 @@ class MATHVCMetaPlannerSystem:
                 print(f"Meta Planner: 已更新{agent_name}的Character Schema")
         except Exception as e:
             print(f"更新角色模式时出错: {e}")
-    
-    def _generate_character_schema_based_response(self, agent_name: str, context: str) -> str:
-        """基于Character Schema生成角色回应"""
-        character_schema = self.character_schemas.get(agent_name, {})
-        agent_info = self.agents[agent_name]
-        
-        # 使用角色的错误理解生成回应
-        prompt = f"""
-你是{agent_info['name']}，一个数学能力{agent_info['math_level']}的学生。
-
-你对当前数学问题的理解（Character Schema）：
-{json.dumps(character_schema, ensure_ascii=False, indent=2)}
-
-当前对话上下文：{context}
-
-请基于你的理解（包含可能的错误）生成一个简短的回应（1-2句话）。
-体现你的数学能力水平和对问题的理解。
-"""
-        
-        try:
-            response = self._call_llm(prompt, temperature=0.7, max_tokens=100)
-            return response.strip()
-        except Exception as e:
-            print(f"生成{agent_name}回应时出错: {e}")
-            return f"我需要再想想这个问题..."
     
     def _update_character_schemas_based_on_input(self, user_input: str):
         """基于用户输入更新Character Schemas"""
@@ -586,7 +625,7 @@ class MATHVCMetaPlannerSystem:
         return self.conversation_history
     
     def _call_llm(self, prompt: str, temperature: float = 0.7, max_tokens: int = 200) -> str:
-        """调用Qwen LLM API"""
+        """调用Qwen LLM API with retry logic"""
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
@@ -601,26 +640,41 @@ class MATHVCMetaPlannerSystem:
             "max_tokens": max_tokens
         }
         
-        # 构建正确的API URL
         api_url = f"{self.api_base_url}/chat/completions"
-        
-        try:
-            response = requests.post(api_url, headers=headers, json=data, timeout=30)
-            response.raise_for_status()
-            result = response.json()
-            
-            if 'choices' in result and len(result['choices']) > 0:
-                return result['choices'][0]['message']['content']
-            else:
-                print(f"LLM API响应格式异常: {result}")
-                return "抱歉，我现在无法回应。"
+        retries = 3
+        delay = 5  # Start with a 5-second delay
+
+        for attempt in range(retries):
+            try:
+                response = requests.post(api_url, headers=headers, json=data, timeout=60)
+                response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
+                result = response.json()
                 
-        except requests.exceptions.RequestException as e:
-            print(f"LLM API调用失败: {e}")
-            return "抱歉，网络连接出现问题。"
-        except Exception as e:
-            print(f"LLM调用出现未知错误: {e}")
-            return "抱歉，出现了技术问题。"
+                if 'choices' in result and len(result['choices']) > 0:
+                    return result['choices'][0]['message']['content']
+                else:
+                    print(f"LLM API response format error: {result}")
+                    # Don't retry on format errors, return a default message
+                    return "Sorry, I received an unusual response."
+
+            except requests.exceptions.HTTPError as e:
+                # Retry on 429 (Too Many Requests) and 5xx server errors
+                if e.response.status_code == 429 or e.response.status_code >= 500:
+                    print(f"API error: {e}. Retrying in {delay} seconds...")
+                    time.sleep(delay)
+                    delay *= 2  # Exponential backoff
+                else:
+                    print(f"HTTP error: {e}")
+                    return "Sorry, a connection error occurred."
+            except requests.exceptions.RequestException as e:
+                print(f"LLM API call failed: {e}")
+                return "Sorry, there was a network connection issue."
+            except Exception as e:
+                print(f"An unknown error occurred during LLM call: {e}")
+                return "Sorry, a technical problem occurred."
+
+        print("LLM call failed after multiple retries.")
+        return "Sorry, the service is currently unavailable. Please try again later."
     
     def _monitor_collaboration_stage(self):
         """
